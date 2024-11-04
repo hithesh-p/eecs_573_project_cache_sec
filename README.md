@@ -1,3 +1,112 @@
+# EECS 573 Project: Cache Security in RISC-V Systems
+
+## Overview
+
+Our project explores cache security in RISC-V systems using the gem5 simulator. It's based on the gem5 simulator, a modular platform for computer-system architecture research, encompassing system-level architecture as well as processor microarchitecture.
+
+## Credit and Source
+
+This project is built upon the gem5 simulator. For more information about gem5, visit [gem5.org](https://www.gem5.org/).
+
+## Getting Started
+
+This repository contains a pre-built RISC-V version of gem5. If you've cloned this repo and checked out to my `eecs_573_proj_main` branch, you can use it directly to test the programs.
+
+### Building gem5 (RISC-V version) from Scratch
+
+If you prefer to build gem5 yourself, follow these steps:
+
+1. Install dependencies (Ubuntu 24.04 or similar):
+   ```bash
+   sudo apt install build-essential scons python3-dev git pre-commit zlib1g zlib1g-dev \
+   libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
+   libboost-all-dev libhdf5-serial-dev python3-pydot python3-venv python3-tk mypy \
+   m4 libcapstone-dev libpng-dev libelf-dev pkg-config wget cmake doxygen
+
+
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/hithesh-p/eecs_573_project_cache_sec.git
+   cd eecs_573_project_cache_sec/gem5
+
+3. Build gem5 with RISC-V support:
+   ```bash
+   scons build/RISCV/gem5.opt -j$(nproc)
+
+This builds the optimized version of gem5 for RISC-V, using all available CPU cores.
+
+
+### Project Structure
+The following files in configs/tutorial/part1/ are custom implementations based on the gem5 official tutorial (for now):
+   - caches.py
+   - simple.py
+   - two_level.py
+
+These have been tested with the X86 build version of gem5.
+Additional files:
+   - two_cpu_risv.py: Prototype code for the basic system
+   - two_cpu_riscv.py: Final code implementing the basic system
+
+
+### System Architecture
+The basic system implemented in two_cpu_riscv.py consists of:
+1. Two CPUs (CPU 0 and CPU 1)
+2. Each CPU has its own private L1 Instruction Cache (ICache) and L1 Data Cache (DCache)
+3. Both L1 caches for each CPU are connected to a common L1 Bus (L2XBar)
+4. A shared L2 Cache sits between the L1 Bus and the Memory Bus (SystemXBar)
+5. The Memory Bus connects to a Memory Controller (MemCtrl), which interfaces with DDR3 Memory (DDR3_1600_8x8)
+
+### System Architecture Diagram
+
+             +------------------+       +------------------+
+             |      CPU 0        |       |      CPU 1        |
+             +------------------+       +------------------+
+             |   ICache 0        |       |   ICache 1        |
+             +------------------+       +------------------+
+             |   DCache 0        |       |   DCache 1        |
+             +------------------+       +------------------+
+                      \                     /
+                       \                   /
+                        +----------------+
+                        |     L1 Bus      |
+                        +----------------+
+                               |
+                               v
+                        +----------------+
+                        |    L2 Cache     |
+                        +----------------+
+                               |
+                               v
+                        +----------------+
+                        |   Memory Bus    |
+                        +----------------+
+                               |
+                               v
+                    +-----------------------+
+                    |   Memory Controller    |
+                    +-----------------------+
+                               |
+                               v
+                    +-----------------------+
+                    |     DDR3_1600_8x8     |
+                    +-----------------------+
+
+
+This serves as our baseline architecture. We shall all make our modifications and improvements to this design as we progress with the project.
+Running Simulations
+1. To run a simulation using the RISC-V version of gem5:
+   ```bash
+   ./build/RISCV/gem5.opt configs/tutorial/part1/two_cpu_riscv.py
+
+### Contributing
+Let us all use the baseline architecture as a starting point and propose changes or improvements to enhance cache security for our project in this RISC-V systems.
+
+### License
+This project is licensed under the terms of the gem5 license as below.
+
+
+
+
 # The gem5 Simulator
 
 This is the repository for the gem5 simulator. It contains the full source code
