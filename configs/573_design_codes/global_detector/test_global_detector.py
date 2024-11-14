@@ -1,80 +1,61 @@
+import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, confusion_matrix
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
-
+import joblib  # Import joblib for saving and loading the model
+import os
 
 class CRICMIGlobalDetector:
-    def __init__(self, num_buckets=4, set_classifier = RandomForestClassifier(n_estimators=100, random_state=42)):
-        # TODO :: GD constructor
-
-        #no of buckets for holding the event history
+    def __init__(self, num_buckets=4, set_classifier=RandomForestClassifier(n_estimators=100, random_state=42)):
         self.num_buckets = num_buckets
-        self.classifier = self.train_Classifier(set_classifier)
-    
-    def attackPrediction(self, event_histories):
-        # TODO :: Need some way to receive event_histories from local detectors
-        sample = self.feature_Extraction(event_histories)
+        self.model_file = "global_detector_model.pkl"  # File to save the model
+        
+        # Check if the model file exists and load it, otherwise train a new model
+        if os.path.exists(self.model_file):
+            self.classifier = self.load_model()
+            print("Model loaded from file.")
+        else:
+            self.classifier = self.train_Classifier(set_classifier)
+            self.save_model()
+            print("Model trained and saved to file.")
 
+    def attackPrediction(self, event_histories):
+        sample = self.feature_Extraction(event_histories)
         res = self.classifier.predict([sample])
         if res[0] == 1:
-            # print("Cache Attack Detected!")
-            print("1 ")
+            print("1 ")  # Cache Attack Detected
         else:
-            # print("No Attack!")
-            print("0 ")
+            print("0 ")  # No Attack
 
     def feature_Extraction(self, event_histories):
-        # Calculate the maximum
         max_alerts = max(event_histories)
-
-        # Calculate the mean
         mean_alerts = sum(event_histories) / len(event_histories)
-
         return [max_alerts, mean_alerts]
 
-    # TODO :: Need to use better data to train the classifier
     def train_Classifier(self, set_classifier):
-        # Example feature data and labels
-        features = [
-            [5, 2.5], [7, 3.2], [12, 6.1], [9, 4.8], [3, 1.4],  # Example benign features
-            [15, 7.2], [14, 6.8], [18, 9.5], [13, 5.9], [16, 8.0]  # Example attack features
-        ]
-        labels = [0, 0, 1, 1, 0, 1, 1, 1, 1, 1]  # 0 = benign, 1 = malicious
+        dataset = pd.read_csv("dataset.csv")
+        features = dataset[['max_alerts', 'mean_alerts']].values
+        labels = dataset['label'].values
 
-        # Split the data
         X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.3, random_state=42)
-
-        # Choose and train the classifier
         classifier = set_classifier
         classifier.fit(X_train, y_train)
 
-
-        # Make predictions and evaluate
         y_pred = classifier.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
-
-
         print(f"Accuracy: {accuracy}")
 
         return classifier
 
-# Testing
+    def save_model(self):
+        joblib.dump(self.classifier, self.model_file)
+        print(f"Model saved to {self.model_file}.")
 
-def test_CRICMIGlobalDetector():
+    def load_model(self):
+        return joblib.load(self.model_file)
+
+# Example usage
+if __name__ == "__main__":
     detector = CRICMIGlobalDetector()
-
-    event_histories_list = [
-        [5, 7, 3, 2],  # Bucket 1
-        [8, 1, 0, 4],  # Bucket 2
-        [3, 4, 6, 8],  # Bucket 3
-        [2, 0, 1, 7]   # Bucket 4
-    ]
-    # Use the global detector to make a prediction
-    for event_histories in event_histories_list:
-        detector.attackPrediction(event_histories)
-
-
-# Run the test function
-test_CRICMIGlobalDetector()
+    event_histories = [7, 3, 5, 2]  # Replace with actual data as needed
+    detector.attackPrediction(event_histories)
