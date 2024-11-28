@@ -46,7 +46,7 @@ class L1DCache(L1Cache):
 
 class L2Cache(Cache):
     size = "256kB"
-    assoc = 8
+    assoc = 1
     tag_latency = 20
     data_latency = 20
     response_latency = 20
