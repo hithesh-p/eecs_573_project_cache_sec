@@ -65,25 +65,41 @@ system.system_port = system.membus.cpu_side_ports
 # Create a DDR3 memory controller and connect it to the membus
 system.mem_ctrl = MemCtrl()
 system.mem_ctrl.dram = DDR3_1600_8x8()
+system.mem_ctrl.dram.devices_per_rank = 1
+system.mem_ctrl.dram.ranks_per_channel = 1
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
+#  system.multi_thread = True
 
 # using a process for the hello world test program
-binary = "tests/test-progs/hello/bin/riscv/linux/hello"
-system.workload = SEWorkload.init_compatible(binary)
-process = Process()
-process.cmd = [binary]
+hello_binary = "tests/test-progs/hello/bin/riscv/linux/hello"
+#  system.workload = SEWorkload.init_compatible(binary)
 
-# setting the workload for both the CPUs
-for cpu in system.cpu:
+victim_bin = "configs/tutorial/part1/poc/victim"
+attacker_bin = "configs/tutorial/part1/poc/attacker"
+system.workload = SEWorkload.init_compatible(hello_binary)
+
+def create_workload(pid, cpu, cmd):
+    process = Process(pid=pid, cmd=cmd)
     cpu.workload = process
     cpu.createThreads()
+    return process
+
+processes = []
+processes.append(create_workload(100, system.cpu[0], [victim_bin]))
+processes.append(create_workload(101, system.cpu[1], [attacker_bin]))
 
 # Setting up the root SimObject and running the simulation
 root = Root(full_system=False, system=system)
 
 # Instantiationnnn
 m5.instantiate()
+
+#  https://stackoverflow.com/questions/74555164/how-to-simulate-two-processes-sharing-memory-in-gem5
+# RK: TODO: not map to all processes
+for p in processes:
+    # map at physical address 256MB
+    p.map(0x3fff0000, 0x10000000, 0x1000)
 
 # lessgoooo
 
