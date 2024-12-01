@@ -14,6 +14,7 @@
 
 # Start here, we'll implement the cache stuff later. This is just using lists and dictionaries.
 import random
+import re
 from dataclasses import dataclass
 
 # Since these are going to be in a dictionary, the index is not needed since that is the other part of the key-value pair
@@ -42,10 +43,50 @@ def randomizeSeed():
         random.seed(random.randint(0, 65535))
 
 def print_decoder(decoder):
+    print(f"Number of filled lines: {len(decoder)}")
     print("Key\tValue")
     for key, value in decoder.items():
         # Print with space padding
         print(f"| {(key):<15} | \t{value:<10} |")
+
+def getDecoderMemIndex(inputLine:str):
+    """
+    Gets the memory index from the decoder line string
+    
+    Parameters:
+        inputLine: The strign to read the memory index from
+        
+    Returns:
+        memIndex: The memory index of the dict key as an int
+    """
+
+    return int(re.match("(^\d+)_\d+_\w+$", inputLine).group(1))
+
+def getDecoderTDID(inputLine:str):
+    """
+    Gets the TDID from the decoder line string
+    
+    Parameters:
+        inputLine: The string to read the TDID from
+        
+    Returns:
+        tdid: The TDID of the dict key as an int
+    """
+
+    return int(re.match("^\d+_(\d+)_\w+$", inputLine).group(1))
+
+def getDecoderProtected(inputLine:str):
+    """
+    Gets the protected flag status from the decoder line string
+    
+    Parameters:
+        inputLine: The string to read the protected flag from
+        
+    Returns:
+        protected: The protected flag status of the dict key as a boolean
+    """
+
+    return bool(re.match("^\d+_\d+_(\w+$)", inputLine).group(1))
         
         
 class ldm:
@@ -145,10 +186,10 @@ class ldm:
         # TODO: Do we want this to return a success value?
 
         # Decoder finds the line to kill, then sends the message out
-        lineNum = self.decoder[dec_line]
+        lineNum = self.decoder[str(dec_line)]
         self.tagArr[lineNum] = None
         self.dataArr[lineNum] = None
-        self.decoder.pop(dec_line)
+        self.decoder.pop(str(dec_line))
 
     # Add data into cache. Assuming one line is empty.
     # spaceFound boolean kept for future use
@@ -176,7 +217,7 @@ class ldm:
                 lineNum = i
         if spaceFound:
             # Since the dict should be empty here, 
-            self.decoder[dec_data] = lineNum
+            self.decoder[str(dec_data)] = lineNum
             self.tagArr[lineNum] = tag
             self.dataArr[lineNum] = data
         else:
@@ -202,25 +243,25 @@ class ldm:
         # Only cycle through the cache once. This way we won't get stuck here if nothing is found
         for i in range(0, self.SIZE):
             # Pick a random line in the decoder
-            randIdx = random.randint(0, len(self.decoder))
+            randIdx = random.randint(0, len(self.decoder)-1)
             # Get the key from that line
             decoderLine = list(self.decoder.keys())[randIdx]
             # Check if the key TDID matches the triggering process' TDID
-            if decoderLine.tdid == dec_data.tdid:
+            if getDecoderTDID(decoderLine) == dec_data.tdid:
                 # If TDID matches, then get the tag index to wipe the line
-                foundValidLine = self.decoder[randIdx]
+                foundValidLine = self.decoder[decoderLine]
                 # Break out of the loop
                 break
         # If we have a line to eliminate, then evict it
         if foundValidLine != None:
-            self.evictLine(foundValidLine)
+            self.evictLine(decoderLine)
         # NOTE: This is here just in case something goes wrong later
         # # We don't need to check for blanks here, the dict only has filled in values
         # randIdx = random.randint(0, len(self.decoder))
         # clearedIndex = list(self.decoder.keys())[randIdx]
         # self.evictLine(clearedIndex)
 
-    def fetchLine(self, index:int, tag:int, tdid:int):
+    def fetchLine(self, decoderLine:decoder_entry, tag:int):
         """
         Fetches a cache line base on the address index provided.
         
@@ -233,19 +274,19 @@ class ldm:
         """
 
         # Check if the index is in the decoder
-        if index in self.decoder:
+        if str(decoderLine) in self.decoder:
             # Index hit, check tags
             pass
-            if tag == self.tagArr[self.decoder[index]]:
+            if tag == self.tagArr[self.decoder[str(decoderLine)]]:
                 # Tag hit
-                return self.dataArr[self.decoder[index]]
+                return self.dataArr[self.decoder[str(decoderLine)]]
             else:
                 # Tag miss
-                self.evictLine(index)
+                self.evictLine(decoderLine)
                 return None
         else:
             # Index miss
-            self.evictRandom(tdid)
+            self.evictRandom(decoderLine)
             return None
 
 
@@ -264,7 +305,7 @@ lc.test_resetCache()
 #     print(lc.dataExists(0xD0, 0xB00)) # Index hits, not tag
 #     print("END: Data exists")
 
-if True:
+if False:
     # Testing the eviction process
     print("START: Evict line")
     lc.test_resetCache()
@@ -282,21 +323,21 @@ if False:
     print("START: Add line")
     lc.test_resetCache()
     print("reset cache")
-    print(lc.decoder)
-    print(lc.dataArr)
+    print_decoder(lc.decoder)
+    # print(lc.dataArr)
     # Evict three lines
     lc.evictLine(str(decoder_entry(0xA0, 0xA, False)))
     lc.evictLine(str(decoder_entry(0x10, 0x1, False)))
     lc.evictLine(str(decoder_entry(0xF0, 0xF, False)))
     print("evict lines")
-    print(lc.decoder)
-    print(lc.dataArr)
+    print_decoder(lc.decoder)
+    # print(lc.dataArr)
     # Add two lines
-    lc.addLine(0x180, 0xF8, "dummy51")
-    lc.addLine(0xFF8, 0xFF, "dummy52")
+    lc.addLine(0x180, decoder_entry(0xF8, 0xA, False), "dummy51")
+    lc.addLine(0xFF8, decoder_entry(0xFF, 0xB, False), "dummy52")
     print("add lines")
-    print(lc.decoder)
-    print(lc.dataArr)
+    print_decoder(lc.decoder)
+    # print(lc.dataArr)
     print("END: Add line")
 
 if False:
@@ -306,13 +347,30 @@ if False:
     print("full cache")
     print_decoder(lc.decoder)
     # print(lc.decoder)
-    print(lc.tagArr)
+    # print(lc.tagArr)
     # Evict three items
     # TODO: The TDID will need to change when ready
-    lc.evictRandom(0x000)
-    lc.evictRandom(0x000)
-    lc.evictRandom(0x000)
+    lc.evictRandom(decoder_entry(0x00, 0xA, False))
+    lc.evictRandom(decoder_entry(0x00, 0xB, False))
+    lc.evictRandom(decoder_entry(0x00, 0xD, False))
     print("modified cache")
-    print(lc.decoder)
-    print(lc.tagArr)
+    print_decoder(lc.decoder)
+    # print(lc.tagArr)
     print("END: Evict random")
+
+if True:
+    # Fetch lines. Get a few valid ones, get a few bad ones
+    print("START: Fetch line (good)")
+    lc.test_resetCache()
+    print_decoder(lc.decoder)
+    lc.fetchLine(decoder_entry(0, 0, False), 0x100)
+    lc.fetchLine(decoder_entry(128, 8, False), 0x900)
+    lc.fetchLine(decoder_entry(160, 10, False), 0xB00)
+    print("START: Fetch line (bad)")
+    print_decoder(lc.decoder)
+    lc.fetchLine(decoder_entry(0, 0, True), 0x100) # Protected miss
+    lc.fetchLine(decoder_entry(176, 10, False), 0xA00) # TDID miss
+    lc.fetchLine(decoder_entry(200, 5, False), 0x500) # Index miss
+    lc.fetchLine(decoder_entry(240, 15, False), 0xD00) # Tag miss
+    print_decoder(lc.decoder)
+    print("END: Fetch line")
