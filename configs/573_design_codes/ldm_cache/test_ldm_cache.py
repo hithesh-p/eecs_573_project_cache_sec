@@ -127,7 +127,7 @@ class ldm:
 
         # Initialize lineCount decoder entries
         for i in range(self.SIZE):
-            tempDec = decoder_entry(mem_index=(0x10*i), tdid=(0x1*i), protected=False)
+            tempDec = decoder_entry(mem_index=(0x10*i), tdid=(i%2), protected=False)
             # print(tempDec)
             self.decoder[str(tempDec)] = i
         
@@ -211,18 +211,26 @@ class ldm:
 
         spaceFound:bool = False
         lineNum = None
-        for i in range(len(self.tagArr)):
-            if self.tagArr[i] == None:
-                spaceFound = True
-                lineNum = i
-        if spaceFound:
-            # Since the dict should be empty here, 
-            self.decoder[str(dec_data)] = lineNum
-            self.tagArr[lineNum] = tag
-            self.dataArr[lineNum] = data
-        else:
-            pass
-            # We didn't put the memory anywhere. We should handle that.
+        attemptCounter:int = 0
+        while spaceFound == False:
+            attemptCounter = attemptCounter + 1
+            if attemptCounter > 5:
+                # Just kills a random line, it's obvious we're not matching a random eviction
+                # TODO: This should not be in the final version
+                self.evictFullRandom()
+            for i in range(len(self.tagArr)):
+                if self.tagArr[i] == None:
+                    spaceFound = True
+                    lineNum = i
+            if spaceFound:
+                # Since the dict should be empty here, just add the line in
+                self.decoder[str(dec_data)] = lineNum
+                self.tagArr[lineNum] = tag
+                self.dataArr[lineNum] = data
+            else:
+                # If we can't find space, we'll need to clear some out.
+                # TODO: If the given TDID doesn't have any other lines, then we're stuck in an infinite loop
+                self.evictRandom(dec_data)
 
     def evictRandom(self, dec_data:decoder_entry):
         """
@@ -260,6 +268,20 @@ class ldm:
         # randIdx = random.randint(0, len(self.decoder))
         # clearedIndex = list(self.decoder.keys())[randIdx]
         # self.evictLine(clearedIndex)
+
+    def evictFullRandom(self):
+        """
+        Just evicts a completely random line from the cache. Does not matter what it is
+        
+        Parameters:
+            N/A
+            
+        Returns:
+            N/A
+        """
+        randIdx = random.randint(0, len(self.decoder)-1)
+        decoderLine = list(self.decoder.keys())[randIdx]
+        self.evictLine(decoderLine)
 
     def fetchLine(self, decoderLine:decoder_entry, tag:int):
         """
@@ -341,6 +363,38 @@ if False:
     print("END: Add line")
 
 if False:
+    # Try to flood the cache with a new process, there should only ever be 16 entires in here.
+    print("START: Flood cache (new processes)")
+    lc.test_resetCache()
+    print("Full cache")
+    print_decoder(lc.decoder)
+    for i in range(0, 20):
+        lc.addLine(tag=0xBB, dec_data=decoder_entry(0x02*i, 0x02, True), data="dummy126.5")
+    print("First 20 items passed in (TDID = 2)")
+    print_decoder(lc.decoder)
+    for i in range(0, 20):
+        lc.addLine(tag=0x11, dec_data=decoder_entry(0x04*i, 0x06, True), data="dummy723.87")
+    print("Second 20 items passed in (TDID = 6)")
+    print_decoder(lc.decoder)
+    print("END: Flood cache (new processes)")
+
+if True:
+    # Try to flood the cache, there should only ever be 16 entires in here.
+    print("START: Flood cache (same processes)")
+    lc.test_resetCache()
+    print("Full cache")
+    print_decoder(lc.decoder)
+    for i in range(0, 20):
+        lc.addLine(tag=0xBB, dec_data=decoder_entry(0x02*i, 0x00, True), data="dummy126.5")
+    print("First 20 items passed in (TDID = 0)")
+    print_decoder(lc.decoder)
+    for i in range(0, 20):
+        lc.addLine(tag=0x11, dec_data=decoder_entry(0x04*i, 0x01, True), data="dummy723.87")
+    print("Second 20 items passed in (TDID = 1)")
+    print_decoder(lc.decoder)
+    print("END: Flood cache (same processes)")
+
+if False:
     # Evicting a random line from the cache
     print("START: Evict random")
     lc.test_resetCache()
@@ -358,7 +412,7 @@ if False:
     # print(lc.tagArr)
     print("END: Evict random")
 
-if True:
+if False: # TODO: I don't think this works correctly
     # Fetch lines. Get a few valid ones, get a few bad ones
     print("START: Fetch line (good)")
     lc.test_resetCache()
