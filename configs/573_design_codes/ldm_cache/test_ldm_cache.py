@@ -13,6 +13,7 @@
 # """
 
 # Start here, we'll implement the cache stuff later. This is just using lists and dictionaries.
+import operator
 import random
 import re
 from dataclasses import dataclass
@@ -310,7 +311,45 @@ class ldm:
             # Index miss
             self.evictRandom(decoderLine)
             return None
+        
+    def randomizeOnce(self):
+        """
+        Randomizes the cache once, uses current random seed.
+        
+        Parameters:
+            N/A
+            
+        Returns:
+            N/A
+        """
 
+        # Create a list of random entries to fill with data
+        # This will have enough for a full cache, we will only pull enough for the current data
+        idxList = random.sample(range(self.SIZE), self.SIZE)
+        # self.dataArr = sorted(self.dataArr, key=idxList)
+        # self.tagArr = sorted(self.tagArr, key=idxList)
+        self.dataArr = list(zip(*sorted(zip(idxList, self.dataArr), key=operator.itemgetter(0))))[1]
+        self.tagArr = list(zip(*sorted(zip(idxList, self.tagArr), key =operator.itemgetter(0))))[1]
+
+        for idx, key in enumerate(list(self.decoder.keys())):
+            self.decoder[key] = idxList[idx]
+
+    def randomizeMultiple(self):
+        """
+        Randomizes the cache multiple times. The number of times randomized is also randomized.
+        After each randomization the seed is changed to make it harder to follow
+        
+        Parameters:
+            N/A
+            
+        Returns:
+            N/A
+        """
+
+        for i in range(0, random.randint(0, 8)):
+            self.randomizeOnce()
+            # TODO: Do we want this in here? Is this overkill / latency inducing?
+            # self.randomizeSeed()
 
 
 lc = ldm(16)
@@ -378,7 +417,7 @@ if False:
     print_decoder(lc.decoder)
     print("END: Flood cache (new processes)")
 
-if True:
+if False:
     # Try to flood the cache, there should only ever be 16 entires in here.
     print("START: Flood cache (same processes)")
     lc.test_resetCache()
@@ -428,3 +467,25 @@ if False: # TODO: I don't think this works correctly
     lc.fetchLine(decoder_entry(240, 15, False), 0xD00) # Tag miss
     print_decoder(lc.decoder)
     print("END: Fetch line")
+
+if True:
+    # Randomize the cache once, see what happens
+    print("START: Randomize cache once")
+    lc.test_resetCache()
+    print("New cache")
+    print_decoder(lc.decoder)
+    lc.randomizeOnce()
+    print("Randomize once")
+    print_decoder(lc.decoder)
+    print("END: Randomize cache once")
+
+if True:
+    # Randomize the cache multiple times in a row
+    print("START: Randomize cache multiple times")
+    lc.test_resetCache()
+    print("New cache")
+    print_decoder(lc.decoder)
+    lc.randomizeMultiple()
+    print("Randomized cache")
+    print_decoder(lc.decoder)
+    print("END: Randomize cache multiple times")
