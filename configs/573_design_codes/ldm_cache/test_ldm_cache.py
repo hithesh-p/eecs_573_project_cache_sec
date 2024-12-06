@@ -328,8 +328,8 @@ class ldm:
         idxList = random.sample(range(self.SIZE), self.SIZE)
         # self.dataArr = sorted(self.dataArr, key=idxList)
         # self.tagArr = sorted(self.tagArr, key=idxList)
-        self.dataArr = list(zip(*sorted(zip(idxList, self.dataArr), key=operator.itemgetter(0))))[1]
-        self.tagArr = list(zip(*sorted(zip(idxList, self.tagArr), key =operator.itemgetter(0))))[1]
+        self.dataArr = list(list(zip(*sorted(zip(idxList, self.dataArr), key=operator.itemgetter(0))))[1])
+        self.tagArr = list(list(zip(*sorted(zip(idxList, self.tagArr), key =operator.itemgetter(0))))[1])
 
         for idx, key in enumerate(list(self.decoder.keys())):
             self.decoder[key] = idxList[idx]
@@ -346,7 +346,7 @@ class ldm:
             N/A
         """
 
-        for i in range(0, random.randint(0, 8)):
+        for i in range(0, random.randint(1, 8)):
             self.randomizeOnce()
             # TODO: Do we want this in here? Is this overkill / latency inducing?
             # self.randomizeSeed()
@@ -468,7 +468,7 @@ if False: # TODO: I don't think this works correctly
     print_decoder(lc.decoder)
     print("END: Fetch line")
 
-if True:
+if False:
     # Randomize the cache once, see what happens
     print("START: Randomize cache once")
     lc.test_resetCache()
@@ -476,6 +476,14 @@ if True:
     print_decoder(lc.decoder)
     lc.randomizeOnce()
     print("Randomize once")
+    print_decoder(lc.decoder)
+    print("Remove some items in the cache")
+    lc.test_resetCache()
+    for i in range(0, 4):
+        lc.evictFullRandom()
+    print_decoder(lc.decoder)
+    print("Randomize it")
+    lc.randomizeOnce()
     print_decoder(lc.decoder)
     print("END: Randomize cache once")
 
@@ -487,5 +495,13 @@ if True:
     print_decoder(lc.decoder)
     lc.randomizeMultiple()
     print("Randomized cache")
+    print_decoder(lc.decoder)
+    print("Remove some items in the cache")
+    lc.test_resetCache()
+    for i in range(0, 4):
+        lc.evictFullRandom()
+    print_decoder(lc.decoder)
+    print("Randomize it")
+    lc.randomizeOnce()
     print_decoder(lc.decoder)
     print("END: Randomize cache multiple times")
