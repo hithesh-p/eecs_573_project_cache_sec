@@ -79,6 +79,7 @@ class CRICMILocalDetector:
 def test_CRICMILocalDetector():
 
     #just a dummy retrun from the callback
+    # no need alert
     def global_detector_callback(event_history, bucket_index, alert):
         print(f"Global Detector Callback Received from Bucket {bucket_index}: ", event_history, "Alert:", alert)
 

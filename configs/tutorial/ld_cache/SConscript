@@ -1,0 +1,4 @@
+Import('*')
+
+SimObject('local_detector.py', sim_objects=['CRICMILocalDetector'])
+Source('cricmi_local_detector.cc')
