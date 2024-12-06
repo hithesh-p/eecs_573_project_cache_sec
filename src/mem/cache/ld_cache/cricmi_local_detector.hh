@@ -14,6 +14,7 @@ private:
     int threshold;
     int num_buckets;
     int interval_limit;
+    int mapper_id;
 };
 
 } // namespace gem5

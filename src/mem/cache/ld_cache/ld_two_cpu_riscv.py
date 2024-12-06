@@ -1,5 +1,5 @@
 from ldcache import L1DCache, L1ICache, L2Cache
-from local_detector import CRICMILocalDetector
+#  from local_detector import CRICMILocalDetector
 
 import m5
 from m5.objects import *

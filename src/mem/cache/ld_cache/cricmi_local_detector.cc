@@ -6,7 +6,8 @@ CRICMILocalDetector::CRICMILocalDetector(const CRICMILocalDetectorParams &params
     : SimObject(params),
       threshold(params.threshold),
       num_buckets(params.num_buckets),
-      interval_limit(params.interval_limit)
+      interval_limit(params.interval_limit),
+      mapper_id(params.mapper_id)
 {
     // Initialize internal data structures or logging if needed
 }

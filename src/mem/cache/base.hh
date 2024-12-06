@@ -65,6 +65,7 @@
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue.hh"
 #include "mem/cache/write_queue_entry.hh"
+#include "mem/cache/ld_cache/cricmi_local_detector.hh"
 #include "mem/packet.hh"
 #include "mem/packet_queue.hh"
 #include "mem/qport.hh"
@@ -986,6 +987,8 @@ class BaseCache : public ClockedObject
      * The address range to which the cache responds on the CPU side.
      * Normally this is all possible memory addresses. */
     const AddrRangeList addrRanges;
+
+    CRICMILocalDetector *detector;
 
   public:
     /** System we are currently operating in. */

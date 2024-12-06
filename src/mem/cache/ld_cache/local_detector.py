@@ -2,55 +2,82 @@ import random
 from m5.objects import SimObject
 from m5.params import Param, VectorParam, Int
 
+class CRICMILocalDetectorHack:
+    pass
+
+
+global_data_mapper_id = 0
+global_data_mapper = {}
+
+
 class CRICMILocalDetector(SimObject):
     type = 'CRICMILocalDetector'
-    cxx_header = "/configs/tutorial/ld_cache/cricmi_local_detector.cc"
+    cxx_header = "mem/cache/ld_cache/cricmi_local_detector.hh"
     cxx_class = "gem5::CRICMILocalDetector"
 
     # Declare parameters
     threshold = Param.Int(8, "Threshold for raising alerts")
     num_buckets = Param.Int(4, "Number of buckets for holding event history")
     interval_limit = Param.Int(32, "Interval counter reset limit")
+
+    mapper_id = Param.Int(0, "mapper id")
+
     # TODO: Ruiying needs this so it can be passed to the global detector
     # alert_callback = Param.SimObject(None)
 
-    
-    
-    
     # Initialization happens post-instantiation in gem5
     def startup(self):
         # Internal data structures
-        self.event_counters = [0] * self.num_buckets  # 8-bit counter for each bucket
-        self.event_histories = [[0] * 8 for _ in range(self.num_buckets)]
-        self.interval_counter = 0
 
+        global global_data_mapper
+        global global_data_mapper_id
+
+        hack = CRICMILocalDetectorHack()
+
+        hack.event_counters = [0] * int(self.num_buckets)  # 8-bit counter for each bucket
+        hack.event_histories = [[0] * 8 for _ in range(int(self.num_buckets))]
+        hack.interval_counter = 0
+
+        # add thread lock
+        # lock acquire
+        global_data_mapper_id += 1
+        mapper_id = self.mapper_id = global_data_mapper_id
+
+        global_data_mapper[mapper_id] = hack
+        # lock release
 
     def detect_cyclic_interference(self, previous_domain, request_domain, current_domain):
+        global global_data_mapper
+        states = global_data_mapper[int(self.mapper_id)]
+
         #if previous_domain != current_domain and current_domain == request_domain:
         for i in range(1, self.num_buckets+1):
             #for the a->b->a cyclic pattern detection
             if previous_domain==i and request_domain == i and request_domain!=current_domain:
-                self.event_counters[i-1] = (self.event_counters[i-1] + 1) % 256 #cyclic inteference is detected so increase event countwr for the bucket
+                states.event_counters[i-1] = (states.event_counters[i-1] + 1) % 256 #cyclic inteference is detected so increase event countwr for the bucket
 
                 #check for threshold hit
-                if self.event_counters[i-1] >= self.threshold:
+                if states.event_counters[i-1] >= self.threshold:
                     self.raise_alert(i)
-                    self.event_counters[i-1] = 0 #setting back the counter to 0 after sending alert
+                    states.event_counters[i-1] = 0 #setting back the counter to 0 after sending alert
 
                 #to shift the event histories (older ones get pushed to make room for newer one)
                 self.update_event_histories(i-1)
 
     def update_event_histories(self, bucket_index):
+        global global_data_mapper
+        states = global_data_mapper[int(self.mapper_id)]
+
         # self.event_histories[bucket_index].append(self.event_counters[bucket_index])
         # if len(self.event_histories[bucket_index]) >= 8:
         #     self.event_histories[bucket_index].pop(0) #delete the last entry
         # Shift history for each bucket and add the current event count
-        if len(self.event_histories[bucket_index]) >= 8:
-            self.event_histories[bucket_index].pop(0)   # Maintain only recent history (max of 8 entries)
+        if len(states.event_histories[bucket_index]) >= 8:
+            states.event_histories[bucket_index].pop(0)   # Maintain only recent history (max of 8 entries)
 
         # Append new value sequentially without resetting to zero
-        next_value = max(self.event_histories[bucket_index]) + 1 if max(self.event_histories[bucket_index]) > 0 else self.event_counters[bucket_index]
-        self.event_histories[bucket_index].append(next_value)
+        next_value = max(states.event_histories[bucket_index]) + 1 if max(states.event_histories[bucket_index]) > 0 else states.event_counters[bucket_index]
+        states.event_histories[bucket_index].append(next_value)
 
     # here is where we use the functionality to send the output to GD
     def raise_alert(self, bucket_index):
@@ -71,14 +98,17 @@ class CRICMILocalDetector(SimObject):
 
 
     def check_interval(self):
-        self.interval_counter += 1
-        if self.interval_counter >= self.interval_limit:
-            self.interval_counter =0
-            self.event_counters = [0] * self.num_buckets
+        global global_data_mapper
+        states = global_data_mapper[int(self.mapper_id)]
+
+        states.interval_counter += 1
+        if states.interval_counter >= self.interval_limit:
+            states.interval_counter =0
+            states.event_counters = [0] * self.num_buckets
 
             # Reset all event histories to zero when interval resets.
             for i in range(self.num_buckets):
-                self.event_histories[i] = [0] * len(self.event_histories[i])
+                states.event_histories[i] = [0] * len(states.event_histories[i])
 
     def simulate_access(self, previous_domain, request_domain, current_domain):
         self.detect_cyclic_interference(previous_domain, request_domain, current_domain)

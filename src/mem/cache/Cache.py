@@ -169,6 +169,9 @@ class BaseCache(ClockedObject):
     # data cache.
     write_allocator = Param.WriteAllocator(NULL, "Write allocator")
 
+    # EECS573 detector
+    detector = Param.CRICMILocalDetector(NULL, "EECS573 detector")
+
 
 class Cache(BaseCache):
     type = "Cache"

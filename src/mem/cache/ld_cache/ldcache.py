@@ -8,8 +8,6 @@ class L1Cache(Cache):
     mshrs = 4
     tgts_per_mshr = 20
 
-    detector = Param.SimObject(None)
-
     # def __init__(self, detector=None, options=None):
     #     super().__init__()
     #     self.detector = detector  # Local detector instance
@@ -69,8 +67,6 @@ class L2Cache(Cache):
     response_latency = 20
     mshrs = 20
     tgts_per_mshr = 12
-
-    detector = Param.SimObject(None)
 
     # def __init__(self, detector=None, options=None):
     #     super().__init__()
