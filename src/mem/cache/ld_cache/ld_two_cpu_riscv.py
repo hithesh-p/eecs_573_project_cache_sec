@@ -24,7 +24,7 @@ system.mem_ranges = [AddrRange("512MB")]  # change this as per need too for us
 # Create two RISC-V TimingSimpleCPU objects
 system.cpu = [TimingSimpleCPU() for i in range(2)]
 
-
+global_dector = CRICMIGlobalDetector()
 
 # Instantiate detectors for each cache
 icache_detectors = [CRICMILocalDetector(threshold=8, num_buckets=4, interval_limit=32) for _ in range(2)]

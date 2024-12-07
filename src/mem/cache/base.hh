@@ -66,6 +66,7 @@
 #include "mem/cache/write_queue.hh"
 #include "mem/cache/write_queue_entry.hh"
 #include "mem/cache/ld_cache/cricmi_local_detector.hh"
+#include "mem/cache/ld_cache/cricmi_global_detector.hh"
 #include "mem/packet.hh"
 #include "mem/packet_queue.hh"
 #include "mem/qport.hh"
@@ -989,6 +990,8 @@ class BaseCache : public ClockedObject
     const AddrRangeList addrRanges;
 
     CRICMILocalDetector *detector;
+
+    CRICMIGlobalDetector *GDetector;
 
   public:
     /** System we are currently operating in. */

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015, 2018, 2023-2024 ARM Limited
+  # Copyright (c) 2012-2013, 2015, 2018, 2023-2024 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -171,6 +171,7 @@ class BaseCache(ClockedObject):
 
     # EECS573 detector
     detector = Param.CRICMILocalDetector(NULL, "EECS573 detector")
+    GDetector = Param.CRICMIGlobalDetector(NULL, "EECS573 Global Detector")
 
 
 class Cache(BaseCache):
