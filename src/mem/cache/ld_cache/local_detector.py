@@ -1,3 +1,4 @@
+from m5.params import *
 import random
 from m5.objects import SimObject
 from m5.params import Param, VectorParam, Int
@@ -21,6 +22,8 @@ class CRICMILocalDetector(SimObject):
     interval_limit = Param.Int(32, "Interval counter reset limit")
 
     mapper_id = Param.Int(0, "mapper id")
+
+    cpuSidePort = RequestPort("LD CPU side port for connecting to the bus")
 
     # TODO: Ruiying needs this so it can be passed to the global detector
     # alert_callback = Param.SimObject(None)

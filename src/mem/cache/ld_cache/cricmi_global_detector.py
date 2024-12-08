@@ -23,3 +23,5 @@ class CRICMIGlobalDetector(SimObject):
     # TODO: Ruiying needs this so it can be passed to the global detector
     # alert_callback = Param.SimObject(None)
 
+    # port initialization
+    mem_side_port = RequestPort("GD Memory side port for connecting to the bus")

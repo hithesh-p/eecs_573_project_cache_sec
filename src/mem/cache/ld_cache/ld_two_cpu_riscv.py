@@ -24,12 +24,12 @@ system.mem_ranges = [AddrRange("512MB")]  # change this as per need too for us
 # Create two RISC-V TimingSimpleCPU objects
 system.cpu = [TimingSimpleCPU() for i in range(2)]
 
-global_dector = CRICMIGlobalDetector()
+system.global_dector = CRICMIGlobalDetector()
 
 # Instantiate detectors for each cache
-icache_detectors = [CRICMILocalDetector(threshold=8, num_buckets=4, interval_limit=32) for _ in range(2)]
-dcache_detectors = [CRICMILocalDetector(threshold=8, num_buckets=4, interval_limit=32) for _ in range(2)]
-l2_detector = CRICMILocalDetector(threshold=8, num_buckets=4, interval_limit=32)
+system.icache_detectors = [CRICMILocalDetector(threshold=8, num_buckets=4, interval_limit=32) for _ in range(2)]
+system.dcache_detectors = [CRICMILocalDetector(threshold=8, num_buckets=4, interval_limit=32) for _ in range(2)]
+system.l2_detector = CRICMILocalDetector(threshold=8, num_buckets=4, interval_limit=32)
 
 # Create L1 instruction and data caches for each CPU
 for i in range(2):
@@ -45,6 +45,11 @@ for i in range(2):
 
 # createing a bus for the L1 caches
 system.l1bus = L2XBar()
+
+system.detectorBus = L2XBar()
+system.global_dector.mem_side_port = system.detectorBus.cpu_side_ports
+system.icache_detectors.cpu_side_port = system.detectorBus.mem_side_ports
+
 
 # connecting these L1 caches to the L1 bus
 for i in range(2):

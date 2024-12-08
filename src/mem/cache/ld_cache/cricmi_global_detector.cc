@@ -1,10 +1,14 @@
 #include "cricmi_global_detector.hh"
 #include "base/debug.hh"
 
+#include <iostream>
+
 namespace gem5 {
+
 
 CRICMIGlobalDetector::CRICMIGlobalDetector(const CRICMIGlobalDetectorParams &params)
     : SimObject(params),
+      memSidePort("mem_side_port", this),
       decay_rate(params.decay_rate),
       increase_rate(params.increase_rate),
       frequency_threshold(params.frequency_threshold),
@@ -13,7 +17,27 @@ CRICMIGlobalDetector::CRICMIGlobalDetector(const CRICMIGlobalDetectorParams &par
       last_occurrence(params.last_occurrence),
       mapper_id(params.mapper_id) {}
 
+// Constructor for CRICMIMemSidePort
+CRICMIGlobalDetector::CRICMIMemSidePort::CRICMIMemSidePort(
+    const std::string &name, CRICMIGlobalDetector *detector)
+    : ResponsePort(name, detector), detector(detector) {}
 
+// Handle incoming packets
+bool CRICMIGlobalDetector::CRICMIMemSidePort::recvTimingReq(PacketPtr pkt) {
+    if (pkt->isWrite()) {
+        uint8_t *data = pkt->getPtr<uint8_t>();
+        // Process the received data
+        // DPRINTF(SimObject, "CRICMIGlobalDetector received write data: %d\n", *data);
+        std::cout << "CRICMIGlobalDetector received write data: " << static_cast<int>(*data) << std::endl;
+    } else if (pkt->isRead()) {
+        // Handle read requests if necessary
+        // DPRINTF(SimObject, "CRICMIGlobalDetector received a read request\n");
+        std::cout << "CRICMIGlobalDetector received a read request" << std::endl;
+    }
+
+    // Indicate that the packet was successfully handled
+    return true;
+}
 
 int CRICMIGlobalDetector::classifyAttack(int history_last) {
     int result = 0;
