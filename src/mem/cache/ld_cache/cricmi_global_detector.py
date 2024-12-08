@@ -18,10 +18,16 @@ class CRICMIGlobalDetector(SimObject):
     frequency_threshold = Param.Int(5, "frequency_threshold")
     bucket_frequencies = VectorParam.Int([0] * 4, "Threshold for interference events")
     last_occurrence = VectorParam.Int([0] * 4, "Threshold for interference events")
-    mapper_id = Param.Int(0, "mapper id")
+    
+
+    bucket_idx = Param.Int(0, "bucket idx from LD")
+    dector_type = Param.Int(-1, "detector_type from LD")
+    
 
     # TODO: Ruiying needs this so it can be passed to the global detector
     # alert_callback = Param.SimObject(None)
 
     # port initialization
     mem_side_port = RequestPort("GD Memory side port for connecting to the bus")
+
+    mapper_id = Param.Int(0, "mapper id")

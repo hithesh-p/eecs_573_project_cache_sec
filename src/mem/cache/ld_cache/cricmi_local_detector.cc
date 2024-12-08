@@ -20,19 +20,23 @@ CRICMILocalDetector::CRICMICpuSidePort::CRICMICpuSidePort(
     : RequestPort(name, detector), detector(detector) {}
 
 
-// void CRICMILocalDetector::sendData(uint8_t *data) {
-//     // Create a request and packet
-//     gem5::Addr dummyAddr = 0x00; // might use dummy addr, don't worry about it
-//     auto req = std::make_shared<gem5::Request>(dummyAddr, sizeof(data), gem5::Request::Flags(), 0);
+void CRICMILocalDetector::sendData(uint8_t bucket_idx, uint32_t event_history, char detector_type) {
+    // Create a request and packet
+    gem5::Addr dummyAddr = 0x00; // might use dummy addr, don't worry about it
+    BucketInfo data;
+    data.bucket_idx = bucket_idx;
+    data.event_history = event_history;
+    data.detector_type = detector_type;
+    auto req = std::make_shared<gem5::Request>(dummyAddr, sizeof(data), gem5::Request::Flags(), 0);
 
-//     auto pkt = new gem5::Packet(req, gem5::MemCmd::WriteReq);
-//     pkt->dataDynamic(data);
+    auto pkt = new gem5::Packet(req, gem5::MemCmd::WriteReq);
+    pkt->dataDynamic(data);
 
-//     // Send the packet downstream
-//     if (!cpu_side_port.sendTimingReq(pkt)) {
-//         panic("Failed to send request to bus.");
-//     }
-// }
+    // Send the packet downstream
+    if (!cpu_side_port.sendTimingReq(pkt)) {
+        panic("Failed to send request to bus.");
+    }
+}
 
 
 } // namespace gem5

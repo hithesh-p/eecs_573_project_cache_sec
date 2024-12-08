@@ -14,6 +14,14 @@ namespace gem5 {
 
 class CRICMILocalDetector : public SimObject {
 public:
+    
+    struct BucketInfo  {
+        uint8_t bucket_idx;
+        uint32_t event_history;
+        int detector_type;
+
+    } bucket_info;
+
     // Port definition
     class CRICMICpuSidePort : public RequestPort {
         public:
@@ -42,7 +50,7 @@ public:
     CRICMILocalDetector(const CRICMILocalDetectorParams &params);
 
     // Method to send data
-    void sendData(uint8_t *data);
+    void sendData(uint8_t bucket_idx, uint32_t event_history, char detector_type);
 
 private:
     int threshold;

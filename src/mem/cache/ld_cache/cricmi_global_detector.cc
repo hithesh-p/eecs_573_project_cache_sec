@@ -25,10 +25,11 @@ CRICMIGlobalDetector::CRICMIMemSidePort::CRICMIMemSidePort(
 // Handle incoming packets
 bool CRICMIGlobalDetector::CRICMIMemSidePort::recvTimingReq(PacketPtr pkt) {
     if (pkt->isWrite()) {
-        uint8_t *data = pkt->getPtr<uint8_t>();
-        // Process the received data
-        // DPRINTF(SimObject, "CRICMIGlobalDetector received write data: %d\n", *data);
-        std::cout << "CRICMIGlobalDetector received write data: " << static_cast<int>(*data) << std::endl;
+        BucketInfo *data = pkt->getPtr<BucketInfo*>();
+        bucket_idx = data->bucket_idx;
+        detector_type = data->detector_type;
+        this->classifyAttack(data->event_history);
+        std::cout << "CRICMIGlobalDetector received data for bucket: " << data-> bucket_idx << std::endl;
     } else if (pkt->isRead()) {
         // Handle read requests if necessary
         // DPRINTF(SimObject, "CRICMIGlobalDetector received a read request\n");
@@ -39,12 +40,12 @@ bool CRICMIGlobalDetector::CRICMIMemSidePort::recvTimingReq(PacketPtr pkt) {
     return true;
 }
 
-int CRICMIGlobalDetector::classifyAttack(int history_last) {
+int CRICMIGlobalDetector::classifyAttack(uint32_t event_history) {
     int result = 0;
 
     for (size_t i = 0; i < bucket_frequencies.size(); ++i) {
         if (i == bucket_idx) {
-            if (history_last > thresholds[bucket_idx]) { // event_History.back()
+            if (event_history > thresholds[bucket_idx]) { // event_History.back()
                 result = 1; // Attack detected
             }
             bucket_frequencies[bucket_idx]++;
@@ -53,6 +54,7 @@ int CRICMIGlobalDetector::classifyAttack(int history_last) {
             last_occurrence[i]++;
         }
     }
+
 
     // Update thresholds
     for (size_t i = 0; i < thresholds.size(); ++i) {

@@ -12,6 +12,12 @@ namespace gem5{
 
 class CRICMIGlobalDetector : public SimObject {
     public:
+        struct BucketInfo {
+            uint8_t bucket_idx;
+            uint32_t event_history;
+            int detector_type;
+
+        } bucket_info;
 
         // Port definition
         class CRICMIMemSidePort : public ResponsePort {
@@ -39,15 +45,13 @@ class CRICMIGlobalDetector : public SimObject {
                 }
 
             private:
-                CRICMIGlobalDetector *detector;
+                CRICMIGlobalDetector *detector; // Response Port need the class object that use it
         };
 
         CRICMIMemSidePort memSidePort;
 
-
-
         CRICMIGlobalDetector(const CRICMIGlobalDetectorParams &params);
-        int classifyAttack(int history_last); // No parameter needed; uses `eventHistory` directly
+        
     
     private:
         std::vector<int> thresholds;
@@ -58,9 +62,12 @@ class CRICMIGlobalDetector : public SimObject {
         std::vector<int> last_occurrence;
 
         int bucket_idx = 0;
-        std::vector<int> event_History; // Stores recent event counts
+        // uint32_t event_history; // Stores recent event counts
+        int detector_type;
 
         int mapper_id;
+
+        int classifyAttack(uint32_t event_history); // No parameter needed; uses `eventHistory` directly
     
 
 };
