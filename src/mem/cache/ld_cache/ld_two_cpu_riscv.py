@@ -39,16 +39,17 @@ for i in range(2):
     system.cpu[i].dcache.connectCPU(system.cpu[i])
 
     # Assign detectors to caches
-    system.cpu[i].icache.detector = icache_detectors[i]
-    system.cpu[i].dcache.detector = dcache_detectors[i]
+    system.cpu[i].icache.detector = system.icache_detectors[i]
+    system.cpu[i].dcache.detector = system.dcache_detectors[i]
 
 
 # createing a bus for the L1 caches
 system.l1bus = L2XBar()
 
 system.detectorBus = L2XBar()
-system.global_dector.mem_side_port = system.detectorBus.cpu_side_ports
-system.icache_detectors.cpu_side_port = system.detectorBus.mem_side_ports
+system.global_dector.cpu_side_port = system.detectorBus.mem_side_ports
+for ddetector in system.dcache_detectors:
+    ddetector.mem_side_port = system.detectorBus.cpu_side_ports
 
 
 # connecting these L1 caches to the L1 bus
@@ -59,7 +60,7 @@ for i in range(2):
 
 # makwe a shared L2 cache
 system.l2cache = L2Cache()
-system.l2cache.detector = l2_detector #assigning the detector
+system.l2cache.detector = system.l2_detector #assigning the detector
 system.l2cache.connectCPUSideBus(system.l1bus)
 
 

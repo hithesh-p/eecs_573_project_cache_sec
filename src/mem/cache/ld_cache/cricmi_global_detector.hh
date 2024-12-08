@@ -14,10 +14,10 @@ class CRICMIGlobalDetector : public SimObject {
     public:
 
         // Port definition
-        class CRICMIMemSidePort : public ResponsePort {
+        class CRICMICPUSidePort : public ResponsePort {
             public:
-                CRICMIMemSidePort(const std::string &name, CRICMIGlobalDetector *detector);
-                bool recvTimingReq(PacketPtr pkt);
+                CRICMICPUSidePort(const std::string &name, CRICMIGlobalDetector *detector);
+                bool recvTimingReq(PacketPtr pkt) override;
 
                 // Implement required pure virtual methods
                 gem5::Tick recvAtomic(gem5::PacketPtr pkt) override {
@@ -42,8 +42,10 @@ class CRICMIGlobalDetector : public SimObject {
                 CRICMIGlobalDetector *detector;
         };
 
-        CRICMIMemSidePort memSidePort;
+        CRICMICPUSidePort cpu_side_port;
 
+        Port &getPort(const std::string &if_name,
+                      PortID idx=InvalidPortID) override;
 
 
         CRICMIGlobalDetector(const CRICMIGlobalDetectorParams &params);

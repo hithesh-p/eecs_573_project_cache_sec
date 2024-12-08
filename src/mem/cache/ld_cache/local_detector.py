@@ -23,7 +23,7 @@ class CRICMILocalDetector(SimObject):
 
     mapper_id = Param.Int(0, "mapper id")
 
-    cpuSidePort = RequestPort("LD CPU side port for connecting to the bus")
+    mem_side_port = RequestPort("LD CPU side port for connecting to the bus")
 
     # TODO: Ruiying needs this so it can be passed to the global detector
     # alert_callback = Param.SimObject(None)

@@ -8,22 +8,24 @@ namespace gem5 {
 
 CRICMIGlobalDetector::CRICMIGlobalDetector(const CRICMIGlobalDetectorParams &params)
     : SimObject(params),
-      memSidePort("mem_side_port", this),
+      cpu_side_port(params.name + ".cpu_side_port", this),
       decay_rate(params.decay_rate),
       increase_rate(params.increase_rate),
       frequency_threshold(params.frequency_threshold),
       thresholds(params.thresholds),
       bucket_frequencies(params.bucket_frequencies),
       last_occurrence(params.last_occurrence),
-      mapper_id(params.mapper_id) {}
+      mapper_id(params.mapper_id)
+{
+}
 
-// Constructor for CRICMIMemSidePort
-CRICMIGlobalDetector::CRICMIMemSidePort::CRICMIMemSidePort(
+// Constructor for CRICMICPUSidePort
+CRICMIGlobalDetector::CRICMICPUSidePort::CRICMICPUSidePort(
     const std::string &name, CRICMIGlobalDetector *detector)
     : ResponsePort(name, detector), detector(detector) {}
 
 // Handle incoming packets
-bool CRICMIGlobalDetector::CRICMIMemSidePort::recvTimingReq(PacketPtr pkt) {
+bool CRICMIGlobalDetector::CRICMICPUSidePort::recvTimingReq(PacketPtr pkt) {
     if (pkt->isWrite()) {
         uint8_t *data = pkt->getPtr<uint8_t>();
         // Process the received data
@@ -68,5 +70,18 @@ int CRICMIGlobalDetector::classifyAttack(int history_last) {
 
     return result;
 }
+
+Port &
+CRICMIGlobalDetector::getPort(const std::string &if_name, PortID idx)
+{
+    if (if_name == "cpu_side_port") {
+        return cpu_side_port;
+    }  else {
+        // return ClockedObject::getPort(if_name, idx);
+        fatal("EECS573_HACK\n");
+    }
+}
+
+
 
 } // namespace gem5

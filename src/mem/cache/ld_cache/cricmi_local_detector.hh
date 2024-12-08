@@ -15,12 +15,12 @@ namespace gem5 {
 class CRICMILocalDetector : public SimObject {
 public:
     // Port definition
-    class CRICMICpuSidePort : public RequestPort {
+    class CRICMIMemSidePort : public RequestPort {
         public:
-            CRICMICpuSidePort(const std::string &name, CRICMILocalDetector *detector);
+            CRICMIMemSidePort(const std::string &name, CRICMILocalDetector *detector);
             // Implementation of recvTimingResp
             bool recvTimingResp(PacketPtr pkt) override {
-                std::cout << "CRICMICpuSidePort: Received timing response: " 
+                std::cout << "CRICMIMemSidePort: Received timing response: " 
                         << pkt->print() << std::endl;
                 // Add custom logic for handling the response here
                 return true; // Indicate success
@@ -28,7 +28,7 @@ public:
 
             // Implementation of recvReqRetry
             void recvReqRetry() override {
-                std::cout << "CRICMICpuSidePort: Retry event received." << std::endl;
+                std::cout << "CRICMIMemSidePort: Retry event received." << std::endl;
                 // Add custom retry logic here
             }
 
@@ -37,9 +37,12 @@ public:
             CRICMILocalDetector *detector;
     };
 
-    CRICMICpuSidePort cpu_side_port;
+    CRICMIMemSidePort mem_side_port;
 
     CRICMILocalDetector(const CRICMILocalDetectorParams &params);
+
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     // Method to send data
     void sendData(uint8_t *data);
