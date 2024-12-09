@@ -14,6 +14,18 @@ namespace gem5 {
 
 class CRICMILocalDetector : public SimObject {
 public:
+
+    // struct to hold the data for each address
+    struct EventData {
+        std::vector<int> event_counters;
+        std::vector<std::vector<int>> event_histories;
+        int interval_counter = 0;
+
+        EventData(int num_buckets)
+            : event_counters(num_buckets, 0),
+              event_histories(num_buckets, std::vector<int>(8, 0)) {}
+    };
+    
     // Port definition
     class CRICMIMemSidePort : public RequestPort {
         public:
@@ -47,11 +59,11 @@ public:
     // Method to send data
     void sendData(uint8_t *data);
 
-    void detectCyclicInterference(int previous_domain, int request_domain, int current_domain);
-    void updateEventHistories(int bucket_index);
-    void raiseAlert(int bucket_index);
-    void checkInterval();
-    void simulateAccess(int previous_domain, int request_domain, int current_domain);
+    void detectCyclicInterference(Addr addr, int previous_domain, int request_domain, int current_domain);
+    void updateEventHistories(Addr addr, int bucket_index);
+    void raiseAlert(Addr addr, int bucket_index);
+    void checkInterval(Addr addr);
+    void simulateAccess(Addr addr, int request_domain);
 
 
 private:
@@ -60,9 +72,7 @@ private:
     int interval_limit;
     int mapper_id;
 
-    std::vector<int> event_counters;
-    std::vector<std::vector<int>> event_histories;
-    int interval_counter = 0;
+    std::map<Addr, EventData> event_data_map; // map with address as key and EventData as value
 };
 
 } // namespace gem5

@@ -11,9 +11,10 @@ CRICMILocalDetector::CRICMILocalDetector(const CRICMILocalDetectorParams &params
       interval_limit(params.interval_limit),
       mapper_id(params.mapper_id)
 {
+    // not needed 
     // Initialize internal data structures or logging if needed
-    event_counters.resize(num_buckets, 0);
-    event_histories.resize(num_buckets, std::vector<int>(8, 0));
+    // event_counters.resize(num_buckets, 0);
+    // event_histories.resize(num_buckets, std::vector<int>(8, 0));
 }
 
 // Constructor for CRICMIMemSidePort
@@ -49,67 +50,77 @@ void CRICMILocalDetector::sendData(uint8_t *data) {
 }
 
 
-void CRICMILocalDetector::detectCyclicInterference(int previous_domain, int request_domain, int current_domain) {
-        auto& states = *hack;
+void CRICMILocalDetector::detectCyclicInterference(Addr addr, int previous_domain, int request_domain, int current_domain) {
+    auto &states = event_data_map[addr];
 
-        for (int i = 1; i <= num_buckets; ++i) {
-            if (previous_domain == i && request_domain == i && request_domain != current_domain) {
-                states.event_counters[i - 1] = (states.event_counters[i - 1] + 1) % 256;
+    for (int i = 1; i <= num_buckets; ++i) {
+        if (previous_domain == i && request_domain == i && request_domain != current_domain) {
+            states.event_counters[i - 1] = (states.event_counters[i - 1] + 1) % 256;
 
-                if (states.event_counters[i - 1] >= threshold) {
-                    raiseAlert(i);
-                    states.event_counters[i - 1] = 0;
-                }
-
-                updateEventHistories(i - 1);
+            if (states.event_counters[i - 1] >= threshold) {
+                raiseAlert(addr, i);
+                states.event_counters[i - 1] = 0;
             }
+
+            updateEventHistories(addr, i - 1);
         }
     }
+}
 
-    void CRICMILocalDetector::updateEventHistories(int bucket_index) {
-        auto& states = *hack;
+void CRICMILocalDetector::updateEventHistories(Addr addr, int bucket_index) {
+    auto &states = event_data_map[addr];
 
-        if (states.event_histories[bucket_index].size() >= 8) {
-            states.event_histories[bucket_index].erase(states.event_histories[bucket_index].begin());
+    if (states.event_histories[bucket_index].size() >= 8) {
+        states.event_histories[bucket_index].erase(states.event_histories[bucket_index].begin());
+    }
+
+    int next_value = !states.event_histories[bucket_index].empty()
+                            ? *std::max_element(states.event_histories[bucket_index].begin(), states.event_histories[bucket_index].end()) + 1
+                            : states.event_counters[bucket_index];
+
+    states.event_histories[bucket_index].push_back(next_value);
+}
+
+void CRICMILocalDetector::raiseAlert(Addr addr, int bucket_index) {
+    std::cout << "Alert: Cyclic interference detected in Bucket " << bucket_index << "!\n";
+
+    const auto &states = event_data_map[addr];
+    const auto& event_history = states.event_histories[bucket_index - 1];
+    std::cout << "Event Histories for Bucket " << bucket_index << ": ";
+    for (int val : event_history) {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
+}
+
+void CRICMILocalDetector::checkInterval(Addr addr) {
+    auto &states = event_data_map[addr];
+
+    states.interval_counter++;
+    if (states.interval_counter >= interval_limit) {
+        states.interval_counter = 0;
+        std::fill(states.event_counters.begin(), states.event_counters.end(), 0);
+
+        for (auto& history : states.event_histories) {
+            std::fill(history.begin(), history.end(), 0);
         }
-
-        int next_value = !states.event_histories[bucket_index].empty()
-                             ? *std::max_element(states.event_histories[bucket_index].begin(), states.event_histories[bucket_index].end()) + 1
-                             : states.event_counters[bucket_index];
-
-        states.event_histories[bucket_index].push_back(next_value);
     }
+}
 
-    void CRICMILocalDetector::raiseAlert(int bucket_index) {
-        std::cout << "Alert: Cyclic interference detected in Bucket " << bucket_index << "!\n";
+void CRICMILocalDetector::simulateAccess(Addr addr, int request_domain) {
+    // to retain previous state values
+    static std::unordered_map<Addr, int> previous_domain_map;
+    static std::unordered_map<Addr, int> current_domain_map;
+    // getting the previous and current domains for the given address
+    int &previous_domain = previous_domain_map[addr];
+    int &current_domain = current_domain_map[addr];
+    //call with the updated new values
+    detectCyclicInterference(addr, previous_domain, current_domain, request_domain);
 
-        auto& states = *hack;
-        const auto& event_history = states.event_histories[bucket_index - 1];
-        std::cout << "Event Histories for Bucket " << bucket_index << ": ";
-        for (int val : event_history) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    void CRICMILocalDetector::checkInterval() {
-        auto& states = *hack;
-
-        states.interval_counter++;
-        if (states.interval_counter >= interval_limit) {
-            states.interval_counter = 0;
-            std::fill(states.event_counters.begin(), states.event_counters.end(), 0);
-
-            for (auto& history : states.event_histories) {
-                std::fill(history.begin(), history.end(), 0);
-            }
-        }
-    }
-
-    void CRICMILocalDetector::simulateAccess(int previous_domain, int request_domain, int current_domain) {
-        detectCyclicInterference(previous_domain, request_domain, current_domain);
-        checkInterval();
-    }
+    previous_domain = current_domain;
+    current_domain = request_domain;
+    checkInterval(addr);
+}
 
 
 } // namespace gem5
