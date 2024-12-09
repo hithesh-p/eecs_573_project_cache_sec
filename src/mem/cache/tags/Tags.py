@@ -148,3 +148,13 @@ class FALRU(BaseTags):
 
     # This tag uses its own embedded indexing
     indexing_policy = NULL
+
+class NewCache(BaseTags):
+    type = 'NewCache'
+    cxx_class = 'gem5::NewCache'
+    cxx_header = "mem/cache/tags/newcache.hh"
+    numSets = Param.Int(Parent.numSets, "Number of sets in the cache")
+    blkSize = Param.Int(Parent.blkSize, "Number of bytes in a block")
+    assoc = Param.Int(Parent.assoc, "Associativity of the cache")
+    lookupLatency = Param.Int(Parent.lookupLatency, "Latency in cycles for a hit")
+    neBit = Param.Int(Parent.neBit, "Number of extra index bits")

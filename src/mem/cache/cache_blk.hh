@@ -109,6 +109,14 @@ class CacheBlk : public TaggedEntry
      */
     Tick whenReady = 0;
 
+    // Newcache items
+    /** Protected bit */
+    int P_bit;
+    /** Decoder Ln register */
+    int lnreg;
+    /** RMT ID */
+    int rmtid;
+
   protected:
     /**
      * Represents that the indicated thread context has a "lock" on

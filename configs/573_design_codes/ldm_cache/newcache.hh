@@ -41,8 +41,8 @@
 #include <list>
 
 #include "mem/cache/tags/base.hh"
-#include "mem/cache/tags/cacheset.hh"
-#include "mem/cache/blk.hh"
+#include "base_dep/cacheset.hh"
+#include "base_dep/blk.hh"
 #include "mem/packet.hh"
 #include "params/NEWCACHE.hh"
 
@@ -53,7 +53,7 @@ class BaseCache;
  * A NEWCACHE cache tag store.
  * @sa  \ref gem5MemorySystem "gem5 Memory System"
  */
-class NEWCACHE : public BaseTags
+class NEWCACHE : public gem5::BaseTags
 {
   public:
     /** Typedef the block type used in this tag store. */
@@ -144,7 +144,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    BlkType* accessBlock(PacketPtr pkt, Cycles &lat, int context_src);
+    BlkType* accessBlock(gem5::PacketPtr pkt, gem5::Cycles &lat, int context_src);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -153,7 +153,7 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.
      */
-    BlkType* findBlock(PacketPtr pkt) const;
+    BlkType* findBlock(gem5::PacketPtr pkt) const;
 
 
     /**
@@ -162,7 +162,7 @@ public:
      * @param writebacks List for any writebacks to be performed.
      * @return The candidate block.
      */
-    BlkType* findVictim(PacketPtr pkt, PacketList &writebacks);
+    BlkType* findVictim(gem5::PacketPtr pkt, gem5::PacketList &writebacks);
 
     /**
      * Insert the new block into the cache.  For LRU this means inserting into
@@ -170,7 +170,7 @@ public:
      * @param addr The address to update.
      * @param blk The block to update.
      */
-    void insertBlock(PacketPtr pkt, BlkType *blk);
+    void insertBlock(gem5::PacketPtr pkt, BlkType *blk);
 
     /**
      * Generate the tag from the given address.
@@ -182,7 +182,7 @@ public:
         return nebit;
     }
 
-    Addr extractTag(Addr addr) const
+    gem5::Addr extractTag(gem5::Addr addr) const
     {
         return (addr >> tagShift);
     }
@@ -192,7 +192,7 @@ public:
      * @param addr The address to get the di bits from.
      * @return The di index of the address.
      */
-    int extractDI(Addr addr) const
+    int extractDI(gem5::Addr addr) const
     {
         return ((addr >> setShift) & diMask);
     }
@@ -202,7 +202,7 @@ public:
      * @param addr The address to get the set from.
      * @return The set index of the address.
      */
-    int extractSet(Addr addr) const
+    int extractSet(gem5::Addr addr) const
     {
         return ((addr >> setShift) & setMask);
     }
@@ -212,7 +212,7 @@ public:
      * @param addr The address to get the offset of.
      * @return The block offset.
      */
-    int extractBlkOffset(Addr addr) const
+    int extractBlkOffset(gem5::Addr addr) const
     {
         return (addr & blkMask);
     }
@@ -222,9 +222,9 @@ public:
      * @param addr the address to align.
      * @return The block address.
      */
-    Addr blkAlign(Addr addr) const
+    gem5::Addr blkAlign(gem5::Addr addr) const
     {
-        return (addr & ~(Addr)blkMask);
+        return (addr & ~(gem5::Addr)blkMask);
     }
 
     /**
@@ -233,18 +233,18 @@ public:
      * @param set The set of the block.
      * @return The block address.
      */
-    Addr regenerateBlkAddr(Addr tag, unsigned set, int lnreg) const
+    gem5::Addr regenerateBlkAddr(gem5::Addr tag, unsigned set, int lnreg) const
     {
-       return ((tag << tagShift) | ((Addr)lnreg << setShift));
+       return ((tag << tagShift) | ((gem5::Addr)lnreg << setShift));
     }
 
     /**
      * Return the hit latency.
      * @return the hit latency.
      */
-    Cycles getHitLatency() const
+    gem5::Cycles getHitLatency() const
     {
-        return hitLatency;
+        return lookupLatency;
     }
     /**
      *iterated through all blocks and clear all locks
