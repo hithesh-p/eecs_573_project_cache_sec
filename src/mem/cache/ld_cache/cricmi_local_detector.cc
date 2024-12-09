@@ -1,4 +1,6 @@
 #include "cricmi_local_detector.hh"
+#include "cricmi_global_detector.hh"
+
 #include <iostream>
 
 namespace gem5 {
@@ -51,7 +53,7 @@ void CRICMILocalDetector::sendData(uint8_t *data) {
 
 
 void CRICMILocalDetector::detectCyclicInterference(Addr addr, int previous_domain, int request_domain, int current_domain) {
-    auto &states = event_data_map[addr];
+    auto states = event_data_map[addr];
 
     for (int i = 1; i <= num_buckets; ++i) {
         if (previous_domain == i && request_domain == i && request_domain != current_domain) {
@@ -91,6 +93,9 @@ void CRICMILocalDetector::raiseAlert(Addr addr, int bucket_index) {
         std::cout << val << " ";
     }
     std::cout << std::endl;
+
+    CRICMIGlobalDetector::hack_global_detector->classifyAttack(bucket_index, event_history[event_history.size() - 1]);
+
 }
 
 void CRICMILocalDetector::checkInterval(Addr addr) {

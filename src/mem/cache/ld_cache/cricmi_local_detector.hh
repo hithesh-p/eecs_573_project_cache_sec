@@ -7,6 +7,7 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/packet_access.hh"
+#include <map>
 
 #include <iostream>
 
@@ -21,9 +22,14 @@ public:
         std::vector<std::vector<int>> event_histories;
         int interval_counter = 0;
 
-        EventData(int num_buckets)
+        EventData(int num_buckets = 0)
             : event_counters(num_buckets, 0),
-              event_histories(num_buckets, std::vector<int>(8, 0)) {}
+              event_histories(num_buckets, std::vector<int>(8, 0)),
+              interval_counter(0) {}
+        
+        // EventData()
+        //     : event_counters(4, 0),
+        //       event_histories(4, std::vector<int>(8, 0)) {}
     };
     
     // Port definition

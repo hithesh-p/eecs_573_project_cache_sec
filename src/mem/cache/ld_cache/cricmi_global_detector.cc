@@ -1,10 +1,12 @@
 #include "cricmi_global_detector.hh"
 #include "base/debug.hh"
+#include <mutex>
 
 #include <iostream>
 
 namespace gem5 {
 
+CRICMIGlobalDetector *CRICMIGlobalDetector::hack_global_detector = nullptr;
 
 CRICMIGlobalDetector::CRICMIGlobalDetector(const CRICMIGlobalDetectorParams &params)
     : SimObject(params),
@@ -17,6 +19,9 @@ CRICMIGlobalDetector::CRICMIGlobalDetector(const CRICMIGlobalDetectorParams &par
       last_occurrence(params.last_occurrence),
       mapper_id(params.mapper_id)
 {
+    if (hack_global_detector)
+        fatal("Error: hack_global_detector already exists\n");
+    hack_global_detector = this;
 }
 
 // Constructor for CRICMICPUSidePort
@@ -41,7 +46,10 @@ bool CRICMIGlobalDetector::CRICMICPUSidePort::recvTimingReq(PacketPtr pkt) {
     return true;
 }
 
-int CRICMIGlobalDetector::classifyAttack(int history_last) {
+int CRICMIGlobalDetector::classifyAttack(int bucket_idx, int history_last) {
+    static std::mutex m;
+    std::unique_lock guard(m);
+
     int result = 0;
 
     for (size_t i = 0; i < bucket_frequencies.size(); ++i) {
@@ -66,6 +74,12 @@ int CRICMIGlobalDetector::classifyAttack(int history_last) {
             thresholds[i] += increase_rate; // Increase threshold
             last_occurrence[i] = 0;
         }
+    }
+
+    if (result){
+        std::cout<<"GD reported ATTACK!\n";
+    } else {
+        std::cout<<"GD reported NO Attack.\n";
     }
 
     return result;
