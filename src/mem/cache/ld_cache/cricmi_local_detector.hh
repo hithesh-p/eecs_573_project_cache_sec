@@ -47,11 +47,22 @@ public:
     // Method to send data
     void sendData(uint8_t *data);
 
+    void detectCyclicInterference(int previous_domain, int request_domain, int current_domain);
+    void updateEventHistories(int bucket_index);
+    void raiseAlert(int bucket_index);
+    void checkInterval();
+    void simulateAccess(int previous_domain, int request_domain, int current_domain);
+
+
 private:
     int threshold;
     int num_buckets;
     int interval_limit;
     int mapper_id;
+
+    std::vector<int> event_counters;
+    std::vector<std::vector<int>> event_histories;
+    int interval_counter = 0;
 };
 
 } // namespace gem5
