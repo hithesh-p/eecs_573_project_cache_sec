@@ -11,3 +11,6 @@ test:
 
 test-local-unit:
 	cd src/mem/cache/ld_cache/ && $(CXX) local_detector.cc -o local_detector -std=c++11 -pthread && ./local_detector
+
+test-global-unit:
+	python3 configs/design_codes_573/global_detector/test_global_detector.py
