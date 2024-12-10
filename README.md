@@ -1,6 +1,6 @@
 # EECS 573 Project: Side-Channel-Resilient Cache Design - Cache Security in RISC-V Systems
 
-## To Run the code, please refer to the Makefile
+## To Run the code, please first refer to [Gem5 Getting Started](#getting-started), and then use the Makefile for our project tests:
       
       make (Runs the integration on gem5)
       make all (To build RISCV for gem5)
