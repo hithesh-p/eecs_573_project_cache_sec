@@ -47,7 +47,9 @@ def print_decoder(decoder):
     print("--------------------------------------")
     print(f"|      Number of filled lines: {len(decoder)}    |")
     print("--------------------------------------")
-    print("Key\tValue")
+    print(f"| {("LNReg"):<15} | \t{"Cache Line":<5} |")
+    print("------------------------------------")
+
     for key, value in decoder.items():
         # Print with space padding
         print(f"| {(key):<15} | \t{value:<10} |")
@@ -127,6 +129,7 @@ class ldm:
 
         self.dataArr = [f"MEM[0x{random.randint(0, 0xFF):X}]" for _ in range(self.SIZE)]
 
+        print("Populating LDM")
         # Initialize lineCount decoder entries
         for i in range(self.SIZE):
             tempDec = decoder_entry(mem_index=(0x10*i), tdid=(i%2), protected=False)
@@ -172,8 +175,9 @@ class ldm:
         Replaces a line that matches the exact entry.
         """
         print(">>>> Replacing line with some line from cache")
-        # self.decoder[str(dec_data)] = f"MEM[0x{random.randint(0, 0xFFF):X}]"
+        
         self.decoder[str(dec_data)] = random.randint(1, self.SIZE-1)
+        
 
         # self.addLine(self.tagArr[self.decoder[str(dec_data)]] + random.randint(0,10), dec_data,f"dummy{random.randint(0,100)}")
           
@@ -338,6 +342,7 @@ class ldm:
 
 # Create a new cache object
 lc = ldm(16)
+cyclonePatternDetected = True
 
 if False:
     # Testing the eviction process
@@ -437,8 +442,13 @@ if True:
     print_decoder(lc.decoder)
     print(f"Load {decoder_entry(160, 0, False)}: {lc.fetchLine(decoder_entry(160, 0, False), 0xB00)}")
     
-    # print("START: Fetch line (bad)")
-    print_decoder(lc.decoder)
+    # Shuffle cache based on input from cyclone detector 
+    if cyclonePatternDetected:
+        print(">> Cyclone Pattern Detected! Shuffling cache...")
+        lc.randomizeOnce()
+        print_decoder(lc.decoder)
+
+    
     lc.fetchLine(decoder_entry(0, 0, True), 0x100) # Protected miss
     lc.fetchLine(decoder_entry(176, 10, False), 0xA00) # TDID miss
     lc.fetchLine(decoder_entry(200, 5, False), 0x500) # Index miss
