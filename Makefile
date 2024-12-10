@@ -4,7 +4,7 @@
 # CXX=clang++15
 
 all:
-	scons build/RISCV/gem5.opt -j12
+	scons build/RISCV/gem5.opt -j`nproc`
 
 test:
 	./build/RISCV/gem5.opt -v src/mem/cache/ld_cache/ld_two_cpu_riscv.py
