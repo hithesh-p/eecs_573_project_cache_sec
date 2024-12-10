@@ -441,7 +441,9 @@ class Transform(object):
         tgts = map(strip, target)
         # surprisingly, os.path.commonprefix is a dumb char-by-char string
         # operation that has nothing to do with paths.
-        com_pfx = os.path.commonprefix(srcs + tgts)
+        srcs_str = list(srcs)[0]
+        tgts_str = list(tgts)[0]
+        com_pfx = os.path.commonprefix([srcs_str.encode('utf-8'),tgts_str.encode('utf-8')])
         com_pfx_len = len(com_pfx)
         if com_pfx:
             # do some cleanup and sanity checking on common prefix
@@ -453,8 +455,8 @@ class Transform(object):
                 # common prefix is directory path: OK
                 pass
             else:
-                src0_len = len(srcs[0])
-                tgt0_len = len(tgts[0])
+                src0_len = len(srcs_str)
+                tgt0_len = len(tgts_str)
                 if src0_len == com_pfx_len:
                     # source is a substring of target, OK
                     pass
@@ -466,7 +468,7 @@ class Transform(object):
                         com_pfx = com_pfx[0:sep_idx]
                     else:
                         com_pfx = ''
-                elif src0_len > com_pfx_len and srcs[0][com_pfx_len] == ".":
+                elif src0_len > com_pfx_len and srcs_str[com_pfx_len-1] == ".":
                     # still splitting at file extension: ok
                     pass
                 else:
@@ -476,8 +478,9 @@ class Transform(object):
         com_pfx_len = len(com_pfx)
         def fmt(files):
             f = map(lambda s: s[com_pfx_len:], files)
-            return ', '.join(f)
-        return self.format % (com_pfx, fmt(srcs), fmt(tgts))
+            f_str = list(f)[0]
+            return ', '.join(f_str.decode())
+        return self.format.decode() % (com_pfx, fmt([srcs_str.encode('utf-8')]).encode('utf-8'), fmt([tgts_str.encode('utf-8')]).encode('utf-8'))
 
 Export('Transform')
 
@@ -868,10 +871,17 @@ for lib in py_getvar('LIBS').split() + py_getvar('SYSLIBS').split():
             py_libs.append(lib)
 py_libs.append(py_version)
 
+# test1 = py_includes.append('/ext/pybind11/include')
+# main.Append(CPPPATH=test1)
 main.Append(CPPPATH=py_includes)
 main.Append(LIBPATH=py_lib_path)
-print(main["CPPPATH"][0])
-print(main["CPPPATH"][1])
+main.Append(CPPPATH='ext/pybind11/include/')
+main.Append(CPPPATH='ext')
+main.Append(CPPPATH='src')
+main.Append(CPPPATH='include')
+
+main.Append(CCFLAGS=['-I/usr/local/include'])
+main.Append(CXXFLAGS=['I/usr/local/include'])
 
 # Cache build files in the supplied directory.
 if main['M5_BUILD_CACHE']:
@@ -883,9 +893,10 @@ if main['M5_BUILD_CACHE']:
 # print(conf.CheckHeader('Python.h', '<>'))
 # print(py_general_include)
 dummy = py_includes[0]+"/Python.h"
-print(dummy)
+print(main["CPPPATH"])
 # print(conf.CheckCXXHeader('warnings.h', '<>'))
 print(os.path.exists(dummy))
+print(conf.logstream)
 conf.CheckHeader("python3.10/Python.h")
 # for item in main.Dictionary().keys():
 #     print(item + "\t\t" + str(main[item]))
