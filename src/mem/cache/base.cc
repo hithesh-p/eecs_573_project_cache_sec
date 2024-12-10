@@ -2664,6 +2664,8 @@ BaseCache::MemSidePort::recvFunctionalSnoop(PacketPtr pkt)
     // Snoops shouldn't happen when bypassing caches
     assert(!cache->system->bypassCaches());
 
+    this->cache->detector->simulateAccess(pkt->getAddr(), pkt->req->requestorId());
+
     // functional snoop (note that in contrast to atomic we don't have
     // a specific functionalSnoop method, as they have the same
     // behaviour regardless)

@@ -7,7 +7,7 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/packet_access.hh"
-#include <map>
+#include <unordered_map>
 
 #include <iostream>
 
@@ -22,7 +22,7 @@ public:
         std::vector<std::vector<int>> event_histories;
         int interval_counter = 0;
 
-        EventData(int num_buckets = 0)
+        EventData(int num_buckets)
             : event_counters(num_buckets, 0),
               event_histories(num_buckets, std::vector<int>(8, 0)),
               interval_counter(0) {}
@@ -77,8 +77,15 @@ private:
     int num_buckets;
     int interval_limit;
     int mapper_id;
+    static int global_mapper_count;
 
-    std::map<Addr, EventData> event_data_map; // map with address as key and EventData as value
+    std::unordered_map<Addr, int> previous_domain_map;
+    std::unordered_map<Addr, int> current_domain_map;
+    std::unordered_map<Addr, int> request_domain_map;
+
+    std::unordered_map<Addr, EventData> event_data_map; // map with address as key and EventData as value
+
+    EventData &get_event_state(Addr addr);
 };
 
 } // namespace gem5

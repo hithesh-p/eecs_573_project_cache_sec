@@ -1,9 +1,12 @@
 #include "cricmi_local_detector.hh"
 #include "cricmi_global_detector.hh"
 
+#include <cstdio>
 #include <iostream>
 
 namespace gem5 {
+
+int CRICMILocalDetector::global_mapper_count = 0;
 
 CRICMILocalDetector::CRICMILocalDetector(const CRICMILocalDetectorParams &params)
     : SimObject(params),
@@ -11,7 +14,8 @@ CRICMILocalDetector::CRICMILocalDetector(const CRICMILocalDetectorParams &params
       threshold(params.threshold),
       num_buckets(params.num_buckets),
       interval_limit(params.interval_limit),
-      mapper_id(params.mapper_id)
+      mapper_id(global_mapper_count++)
+      // mapper_id(params.mapper_id)
 {
     // not needed 
     // Initialize internal data structures or logging if needed
@@ -53,11 +57,18 @@ void CRICMILocalDetector::sendData(uint8_t *data) {
 
 
 void CRICMILocalDetector::detectCyclicInterference(Addr addr, int previous_domain, int request_domain, int current_domain) {
-    auto states = event_data_map[addr];
+    event_data_map.emplace(addr, EventData(num_buckets));
+    auto &states = get_event_state(addr);
+
+    // printf("previous_domain %d request_domain %d current_domain %d\n",
+            // previous_domain, request_domain, current_domain);
 
     for (int i = 1; i <= num_buckets; ++i) {
+
         if (previous_domain == i && request_domain == i && request_domain != current_domain) {
             states.event_counters[i - 1] = (states.event_counters[i - 1] + 1) % 256;
+            printf("alert raised i=%d num_buckets=%d, states.event_counters[i - 1]=%d\n",
+                    i, num_buckets, states.event_counters[i - 1]);
 
             if (states.event_counters[i - 1] >= threshold) {
                 raiseAlert(addr, i);
@@ -70,7 +81,8 @@ void CRICMILocalDetector::detectCyclicInterference(Addr addr, int previous_domai
 }
 
 void CRICMILocalDetector::updateEventHistories(Addr addr, int bucket_index) {
-    auto &states = event_data_map[addr];
+    event_data_map.emplace(addr, EventData(num_buckets));
+    auto &states = get_event_state(addr);
 
     if (states.event_histories[bucket_index].size() >= 8) {
         states.event_histories[bucket_index].erase(states.event_histories[bucket_index].begin());
@@ -86,7 +98,7 @@ void CRICMILocalDetector::updateEventHistories(Addr addr, int bucket_index) {
 void CRICMILocalDetector::raiseAlert(Addr addr, int bucket_index) {
     std::cout << "Alert: Cyclic interference detected in Bucket " << bucket_index << "!\n";
 
-    const auto &states = event_data_map[addr];
+    auto &states = get_event_state(addr);
     const auto& event_history = states.event_histories[bucket_index - 1];
     std::cout << "Event Histories for Bucket " << bucket_index << ": ";
     for (int val : event_history) {
@@ -99,7 +111,7 @@ void CRICMILocalDetector::raiseAlert(Addr addr, int bucket_index) {
 }
 
 void CRICMILocalDetector::checkInterval(Addr addr) {
-    auto &states = event_data_map[addr];
+    auto &states = get_event_state(addr);
 
     states.interval_counter++;
     if (states.interval_counter >= interval_limit) {
@@ -113,20 +125,52 @@ void CRICMILocalDetector::checkInterval(Addr addr) {
 }
 
 void CRICMILocalDetector::simulateAccess(Addr addr, int request_domain) {
+    // addr = addr & 0x3ffc0;
+    addr = addr & 0xfc0;
+
+    // debug: only see CPU 2
+    // if (request_domain != 10)
+        // return;
+
+    // EECS573 hack: only see two CPUs
+    if (request_domain != 6 && request_domain != 10)
+        return;
+
+    if (0 || (addr >> 6) % 64 == 54) {
+        printf("mapper_id %d: addr %llx domain %d\n",
+                mapper_id, addr >> 6, request_domain);
+    }
+
     // to retain previous state values
-    static std::unordered_map<Addr, int> previous_domain_map;
-    static std::unordered_map<Addr, int> current_domain_map;
     // getting the previous and current domains for the given address
     int &previous_domain = previous_domain_map[addr];
     int &current_domain = current_domain_map[addr];
+
+    if (request_domain == request_domain_map[addr])
+        return;
+
+    request_domain_map[addr] = request_domain;
+
+    if (0 || (addr >> 6) % 64 == 54) {
+        printf("mapper_id %d: previous_domain %d current_domain %d request_domain %d\n",
+                mapper_id, previous_domain, current_domain, request_domain);
+        fflush(stdout);
+    }
+
     //call with the updated new values
-    detectCyclicInterference(addr, previous_domain, current_domain, request_domain);
+    detectCyclicInterference(addr, previous_domain, request_domain, current_domain);
 
     previous_domain = current_domain;
     current_domain = request_domain;
     checkInterval(addr);
 }
 
+CRICMILocalDetector::EventData &CRICMILocalDetector::get_event_state(Addr addr) {
+    auto it = event_data_map.find(addr);
+    if (it == event_data_map.end())
+        fatal("EECS573: Cannot find map for addr %d\n", addr);
+    return it->second;
+}
 
 } // namespace gem5
 

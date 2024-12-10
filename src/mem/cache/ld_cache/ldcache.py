@@ -1,7 +1,7 @@
 from m5.objects import Cache, SimObject, Param
 
 class L1Cache(Cache):
-    assoc = 2
+    assoc = 1
     tag_latency = 2
     data_latency = 2
     response_latency = 2
@@ -61,7 +61,7 @@ class L1DCache(L1Cache):
 
 class L2Cache(Cache):
     size = "256kB"
-    assoc = 8
+    assoc = 1
     tag_latency = 20
     data_latency = 20
     response_latency = 20

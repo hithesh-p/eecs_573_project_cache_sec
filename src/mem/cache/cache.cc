@@ -417,6 +417,8 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
 void
 Cache::recvTimingReq(PacketPtr pkt)
 {
+    this->detector->simulateAccess(pkt->getAddr(), pkt->req->requestorId());
+
     DPRINTF(CacheTags, "%s tags:\n%s\n", __func__, tags->print());
 
     promoteWholeLineWrites(pkt);
@@ -1267,6 +1269,8 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
         return;
     }
 
+    this->detector->simulateAccess(pkt->getAddr(), pkt->req->requestorId());
+
     bool is_secure = pkt->isSecure();
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
 
@@ -1382,6 +1386,8 @@ Cache::recvAtomicSnoop(PacketPtr pkt)
     if (!inRange(pkt->getAddr())) {
         return 0;
     }
+
+    this->detector->simulateAccess(pkt->getAddr(), pkt->req->requestorId());
 
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
     uint32_t snoop_delay = handleSnoop(pkt, blk, false, false, false);

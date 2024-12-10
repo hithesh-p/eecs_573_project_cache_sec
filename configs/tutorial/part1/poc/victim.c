@@ -5,6 +5,12 @@
 #define CACHELINE 64
 #define PAGE 4096
 
+#if 1
+#define dprintf(...) do {} while(0)
+#else
+#define dprintf(fmt, ...) do { printf(fmt, ##__VA_ARGS__); } while(0)
+#endif
+
 char *secret = (char*)0x3fff0000UL;
 
 uint64_t __attribute__((optimize("O0"))) measure_access_time(int index) {
@@ -19,19 +25,20 @@ uint64_t __attribute__((optimize("O0"))) measure_access_time(int index) {
 }
 
 int main() {
-	memset(secret, 0xbe, PAGE);
-	printf("[1] victim: done init\n");
+	// memset(secret, 0xbe, PAGE);
+	dprintf("[1] victim: done init\n");
 
 	busy_loop(2000000);
-	printf("[4] victim: done spinning\n");
+	dprintf("[4] victim: done spinning\n");
 
 	uint64_t access_time = measure_access_time(54);
+	access_time = measure_access_time(54);
 
-	printf("[5] victim access once; time %lu\n", access_time);
+	dprintf("[5] victim access once; time %lu\n", access_time);
 
-	printf("[6] victim: continue spinning\n");
-	busy_loop(1000000);
-	printf("[10] victim: spinning done\n");
+	dprintf("[6] victim: continue spinning\n");
+	busy_loop(2000000);
+	dprintf("[10] victim: spinning done\n");
 
 	return 0;
 }
