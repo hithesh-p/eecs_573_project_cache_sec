@@ -1,4 +1,13 @@
-# EECS 573 Project: Cache Security in RISC-V Systems
+# EECS 573 Project: Side-Channel-Resilient Cache Design - Cache Security in RISC-V Systems
+
+## To Run the code, please refer to the Makefile
+      
+      make (Runs the integration on gem5)
+      make all (To build RISCV for gem5)
+      make test (Runs the integration test on gem5)
+      make test-local-unit (Runs the unittest for local detector)
+      make test-global-unit (Runs the unittest for global detector)
+      make test-newcache (Runs the unittest for newcache module)
 
 ## Overview
 
