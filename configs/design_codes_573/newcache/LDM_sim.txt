@@ -1,0 +1,97 @@
+Initializing cache
+Populating LDM
+--------------------------------------
+|      Number of filled lines: 16    |
+--------------------------------------
+| LNReg           | 	Cache Line |
+------------------------------------
+| 0_0_False       | 	0          |
+| 16_1_False      | 	1          |
+| 32_0_False      | 	2          |
+| 48_1_False      | 	3          |
+| 64_0_False      | 	4          |
+| 80_1_False      | 	5          |
+| 96_0_False      | 	6          |
+| 112_1_False     | 	7          |
+| 128_0_False     | 	8          |
+| 144_1_False     | 	9          |
+| 160_0_False     | 	10         |
+| 176_1_False     | 	11         |
+| 192_0_False     | 	12         |
+| 208_1_False     | 	13         |
+| 224_0_False     | 	14         |
+| 240_1_False     | 	15         |
+Load 0_0_False: MEM[0xA]
+>> Tag miss! Replacing line associated with 96_0_False
+>>>> Replacing line with some line from cache
+Load 96_0_False: None
+>> Index miss on 96_1_False! Evicting random line...
+>>>> Randomly evicted 208_1_False
+Load 96_1_False: None
+--------------------------------------
+|      Number of filled lines: 15    |
+--------------------------------------
+| LNReg           | 	Cache Line |
+------------------------------------
+| 0_0_False       | 	0          |
+| 16_1_False      | 	1          |
+| 32_0_False      | 	2          |
+| 48_1_False      | 	3          |
+| 64_0_False      | 	4          |
+| 80_1_False      | 	5          |
+| 96_0_False      | 	10         |
+| 112_1_False     | 	7          |
+| 128_0_False     | 	8          |
+| 144_1_False     | 	9          |
+| 160_0_False     | 	10         |
+| 176_1_False     | 	11         |
+| 192_0_False     | 	12         |
+| 224_0_False     | 	14         |
+| 240_1_False     | 	15         |
+Load 160_0_False: MEM[0x76]
+>> Cyclone Pattern Detected! Shuffling cache...
+--------------------------------------
+|      Number of filled lines: 15    |
+--------------------------------------
+| LNReg           | 	Cache Line |
+------------------------------------
+| 0_0_False       | 	1          |
+| 16_1_False      | 	5          |
+| 32_0_False      | 	0          |
+| 48_1_False      | 	8          |
+| 64_0_False      | 	12         |
+| 80_1_False      | 	9          |
+| 96_0_False      | 	11         |
+| 112_1_False     | 	6          |
+| 128_0_False     | 	2          |
+| 144_1_False     | 	4          |
+| 160_0_False     | 	10         |
+| 176_1_False     | 	7          |
+| 192_0_False     | 	13         |
+| 224_0_False     | 	15         |
+| 240_1_False     | 	3          |
+>> Index miss on 0_0_True! Evicting random line...
+>>>> Randomly evicted 96_0_False
+>> Index miss on 176_10_False! Evicting random line...
+>> Index miss on 200_5_False! Evicting random line...
+>> Index miss on 240_15_False! Evicting random line...
+--------------------------------------
+|      Number of filled lines: 14    |
+--------------------------------------
+| LNReg           | 	Cache Line |
+------------------------------------
+| 0_0_False       | 	1          |
+| 16_1_False      | 	5          |
+| 32_0_False      | 	0          |
+| 48_1_False      | 	8          |
+| 64_0_False      | 	12         |
+| 80_1_False      | 	9          |
+| 112_1_False     | 	6          |
+| 128_0_False     | 	2          |
+| 144_1_False     | 	4          |
+| 160_0_False     | 	10         |
+| 176_1_False     | 	7          |
+| 192_0_False     | 	13         |
+| 224_0_False     | 	15         |
+| 240_1_False     | 	3          |
+END: Fetch line
