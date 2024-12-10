@@ -431,11 +431,11 @@ if True:
     """
     lc.test_resetCache()
     print_decoder(lc.decoder)
-    print(f"Load: {lc.fetchLine(decoder_entry(0, 0, False), 0x100)}")
-    print(f"Load: {lc.fetchLine(decoder_entry(96, 0, False), 0x900)}") # Tag Miss
-    print(f"Load: {lc.fetchLine(decoder_entry(96, 1, False), 0x900)}")
+    print(f"Load {decoder_entry(0, 0, False)}: {lc.fetchLine(decoder_entry(0, 0, False), 0x100)}")
+    print(f"Load {decoder_entry(96, 0, False)}: {lc.fetchLine(decoder_entry(96, 0, False), 0x900)}") # Tag Miss
+    print(f"Load {decoder_entry(96, 1, False)}: {lc.fetchLine(decoder_entry(96, 1, False), 0x900)}")
     print_decoder(lc.decoder)
-    print(f"Load: {lc.fetchLine(decoder_entry(160, 0, False), 0xB00)}")
+    print(f"Load {decoder_entry(160, 0, False)}: {lc.fetchLine(decoder_entry(160, 0, False), 0xB00)}")
     
     # print("START: Fetch line (bad)")
     print_decoder(lc.decoder)
