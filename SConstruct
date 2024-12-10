@@ -890,17 +890,7 @@ if main['M5_BUILD_CACHE']:
 
 
 # verify that this stuff works
-# print(conf.CheckHeader('Python.h', '<>'))
-# print(py_general_include)
-dummy = py_includes[0]+"/Python.h"
-print(main["CPPPATH"])
-# print(conf.CheckCXXHeader('warnings.h', '<>'))
-print(os.path.exists(dummy))
-print(conf.logstream)
-conf.CheckHeader("python3.10/Python.h")
-# for item in main.Dictionary().keys():
-#     print(item + "\t\t" + str(main[item]))
-# print(main.Dump())
+
 
 if not conf.CheckHeader('Python.h', '<>'):
     print ("Error: can't find Python.h header in", py_includes)
