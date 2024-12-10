@@ -44,7 +44,9 @@ def randomizeSeed():
         random.seed(random.randint(0, 65535))
 
 def print_decoder(decoder):
-    print(f"Number of filled lines: {len(decoder)}")
+    print("--------------------------------------")
+    print(f"|      Number of filled lines: {len(decoder)}    |")
+    print("--------------------------------------")
     print("Key\tValue")
     for key, value in decoder.items():
         # Print with space padding
@@ -112,6 +114,7 @@ class ldm:
 
     def test_resetCache(self):
         # Put some dummy data into the cache lines. Size = 16
+        print("Initializing cache")
         self.tagArr = [
             0x100, 0x200, 0x300, 0x400,
             0x500, 0x600, 0x700, 0x800,
@@ -119,12 +122,10 @@ class ldm:
             0xD00, 0xE00, 0xF00, 0x000
         ]
 
-        self.dataArr = [
-            "dummy1", "dummy2", "dummy3", "dummy4",
-            "dummy5", "dummy6", "dummy7", "dummy8",
-            "dummy9", "dummy10", "dummy11", "dummy12",
-            "dummy13", "dummy14", "dummy15", "dummy16"
-        ]
+        # Initialize the data array with some dummy data in the format "MEM[0x{random hexadecimal number that is different for each entry}]"
+        # Randomly initialize an array of 16 entries with random hexadecimal numbers
+
+        self.dataArr = [f"MEM[0x{random.randint(0, 0xFF):X}]" for _ in range(self.SIZE)]
 
         # Initialize lineCount decoder entries
         for i in range(self.SIZE):
@@ -132,14 +133,6 @@ class ldm:
             # print(tempDec)
             self.decoder[str(tempDec)] = i
         
-
-        # self.decoder = {
-        #     0x10:0, 0x20:1, 0x30:2, 0x40:3,
-        #     0x50:4, 0x60:5, 0x70:6, 0x80:7,
-        #     0x90:8, 0xA0:9, 0xB0:10, 0xC0:11,
-        #     0xD0:12, 0xE0:13, 0xF0:14, 0x00:15
-        # }
-
     # Generate a new seed, use a dummy value for now
     def randomizeSeed(self):
         """
@@ -154,24 +147,6 @@ class ldm:
         
         for i in range(0, random.randint(0,15)):
             random.seed(random.randint(0, 65535))
-
-    # TODO: Function commented out since we don't see a use anywhere.
-    # This is kept in case we do happen to need it
-    # # Function to take a memory address in, returns index hit/miss and tag hit/miss
-    # def dataExists(self, index:int, tag:int):
-
-    #     # Shouldn't this be self.decoder?            
-    #     if index in self.decoder:
-    #         indexHit = True
-    #         if tag == self.tagArr[lc.decoder[index]]:
-    #             tagHit = True
-    #         else:
-    #             tagHit = False
-    #     else:
-    #         indexHit = False
-    #         tagHit = False
-
-    #     return indexHit, tagHit
 
     # Function to evict given line
     def evictLine(self, dec_line:decoder_entry):
@@ -191,6 +166,17 @@ class ldm:
         self.tagArr[lineNum] = None
         self.dataArr[lineNum] = None
         self.decoder.pop(str(dec_line))
+
+    def replaceLine(self, dec_data:decoder_entry):
+        """
+        Replaces a line that matches the exact entry.
+        """
+        print(">>>> Replacing line with some line from cache")
+        # self.decoder[str(dec_data)] = f"MEM[0x{random.randint(0, 0xFFF):X}]"
+        self.decoder[str(dec_data)] = random.randint(1, self.SIZE-1)
+
+        # self.addLine(self.tagArr[self.decoder[str(dec_data)]] + random.randint(0,10), dec_data,f"dummy{random.randint(0,100)}")
+          
 
     # Add data into cache. Assuming one line is empty.
     # spaceFound boolean kept for future use
@@ -263,12 +249,9 @@ class ldm:
                 break
         # If we have a line to eliminate, then evict it
         if foundValidLine != None:
+            print(f">>>> Randomly evicted {decoderLine}")
             self.evictLine(decoderLine)
         # NOTE: This is here just in case something goes wrong later
-        # # We don't need to check for blanks here, the dict only has filled in values
-        # randIdx = random.randint(0, len(self.decoder))
-        # clearedIndex = list(self.decoder.keys())[randIdx]
-        # self.evictLine(clearedIndex)
 
     def evictFullRandom(self):
         """
@@ -305,10 +288,12 @@ class ldm:
                 return self.dataArr[self.decoder[str(decoderLine)]]
             else:
                 # Tag miss
-                self.evictLine(decoderLine)
+                print(f">> Tag miss! Replacing line associated with {decoderLine}")                    
+                self.replaceLine(decoderLine)
                 return None
         else:
             # Index miss
+            print(f">> Index miss on {decoderLine}! Evicting random line...")                    
             self.evictRandom(decoderLine)
             return None
         
@@ -326,8 +311,7 @@ class ldm:
         # Create a list of random entries to fill with data
         # This will have enough for a full cache, we will only pull enough for the current data
         idxList = random.sample(range(self.SIZE), self.SIZE)
-        # self.dataArr = sorted(self.dataArr, key=idxList)
-        # self.tagArr = sorted(self.tagArr, key=idxList)
+
         self.dataArr = list(list(zip(*sorted(zip(idxList, self.dataArr), key=operator.itemgetter(0))))[1])
         self.tagArr = list(list(zip(*sorted(zip(idxList, self.tagArr), key =operator.itemgetter(0))))[1])
 
@@ -352,19 +336,8 @@ class ldm:
             # self.randomizeSeed()
 
 
+# Create a new cache object
 lc = ldm(16)
-lc.test_resetCache()
-
-# Tests are in if statements to disable them as needed.
-# Just set them to True / False as needed
-
-# if False:
-#     # Test the data exists function
-#     print("START: Data exists")
-#     print(lc.dataExists(0xA0, 0xA00)) # Both hit
-#     print(lc.dataExists(0xF8, 0xFF8)) # Both miss
-#     print(lc.dataExists(0xD0, 0xB00)) # Index hits, not tag
-#     print("END: Data exists")
 
 if False:
     # Testing the eviction process
@@ -451,15 +424,20 @@ if False:
     # print(lc.tagArr)
     print("END: Evict random")
 
-if False: # TODO: I don't think this works correctly
-    # Fetch lines. Get a few valid ones, get a few bad ones
-    print("START: Fetch line (good)")
+if True: 
+    # Test the NewCache Functionality
+    """
+    Series of cache accesses to test the behaviour upon index hit, index miss, tag hit and tag miss
+    """
     lc.test_resetCache()
     print_decoder(lc.decoder)
-    lc.fetchLine(decoder_entry(0, 0, False), 0x100)
-    lc.fetchLine(decoder_entry(128, 8, False), 0x900)
-    lc.fetchLine(decoder_entry(160, 10, False), 0xB00)
-    print("START: Fetch line (bad)")
+    print(f"Load: {lc.fetchLine(decoder_entry(0, 0, False), 0x100)}")
+    print(f"Load: {lc.fetchLine(decoder_entry(96, 0, False), 0x900)}") # Tag Miss
+    print(f"Load: {lc.fetchLine(decoder_entry(96, 1, False), 0x900)}")
+    print_decoder(lc.decoder)
+    print(f"Load: {lc.fetchLine(decoder_entry(160, 0, False), 0xB00)}")
+    
+    # print("START: Fetch line (bad)")
     print_decoder(lc.decoder)
     lc.fetchLine(decoder_entry(0, 0, True), 0x100) # Protected miss
     lc.fetchLine(decoder_entry(176, 10, False), 0xA00) # TDID miss
@@ -487,7 +465,7 @@ if False:
     print_decoder(lc.decoder)
     print("END: Randomize cache once")
 
-if True:
+if False:
     # Randomize the cache multiple times in a row
     print("START: Randomize cache multiple times")
     lc.test_resetCache()
