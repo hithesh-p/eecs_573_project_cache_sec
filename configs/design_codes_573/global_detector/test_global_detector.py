@@ -1,61 +1,105 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
-import joblib  # Import joblib for saving and loading the model
-import os
 
 class CRICMIGlobalDetector:
-    def __init__(self, num_buckets=4, set_classifier=RandomForestClassifier(n_estimators=100, random_state=42)):
-        self.num_buckets = num_buckets
-        self.model_file = "global_detector_model.pkl"  # File to save the model
+    def __init__(self, initial_thresholds = [3,3,3,3], decay_rate = 1, increase_rate = 1, frequency_threshold = 4):
+        self.thresholds = initial_thresholds  # Initial thresholds for 4 buckets
+        self.decay_rate = decay_rate          # Rate of decreasing threshold
+        self.increase_rate = increase_rate    # Rate of increasing threshold
+        self.frequency_threshold = frequency_threshold
+        self.bucket_frequencies = [0] * len(initial_thresholds)
+        self.last_occurrence = [0] * len(initial_thresholds)
+
+    def classifyAttack(self, bucket_idx, event_history):
+        result = 0
         
-        # Check if the model file exists and load it, otherwise train a new model
-        if os.path.exists(self.model_file):
-            self.classifier = self.load_model()
-            print("Model loaded from file.")
+        for i in range(len(self.bucket_frequencies)):
+            if i == bucket_idx:
+                if event_history[-1] > self.thresholds[bucket_idx]:
+                    result = 1
+                self.bucket_frequencies[bucket_idx] += 1
+                self.last_occurrence[bucket_idx] = 0
+            else:
+                self.last_occurrence[i] += 1
+        
+        #Update the thredsholds
+        for i in range(len(self.thresholds)):
+            if self.bucket_frequencies[i] >= self.frequency_threshold:
+                if self.thresholds[i] >= self.decay_rate:
+                    self.thresholds[i] -= self.decay_rate  # Reduce threshold
+                self.bucket_frequencies[i] = 0
+            if self.last_occurrence[i] >= self.frequency_threshold:
+                self.thresholds[i] += self.increase_rate  # Increase threshold
+                self.last_occurrence[i] = 0
+
+        if result == 1:
+            print(f"                                               Attack at Bucket {bucket_idx}!    Threshold: {self.thresholds}")
         else:
-            self.classifier = self.train_Classifier(set_classifier)
-            self.save_model()
-            print("Model trained and saved to file.")
+            print(f"                                                      Safe!           Threshold: {self.thresholds}")
+        
+        return result
 
-    def attackPrediction(self, event_histories):
-        sample = self.feature_Extraction(event_histories)
-        res = self.classifier.predict([sample])
-        if res[0] == 1:
-            print("1 ")  # Cache Attack Detected
-        else:
-            print("0 ")  # No Attack
 
-    def feature_Extraction(self, event_histories):
-        max_alerts = max(event_histories)
-        mean_alerts = sum(event_histories) / len(event_histories)
-        return [max_alerts, mean_alerts]
 
-    def train_Classifier(self, set_classifier):
-        dataset = pd.read_csv("dataset.csv")
-        features = dataset[['max_alerts', 'mean_alerts']].values
-        labels = dataset['label'].values
 
-        X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.3, random_state=42)
-        classifier = set_classifier
-        classifier.fit(X_train, y_train)
+detector = CRICMIGlobalDetector(
+            initial_thresholds=[3,3,3,3],
+            decay_rate=2,
+            increase_rate=1,
+            frequency_threshold=3
+        )
 
-        y_pred = classifier.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred)
-        print(f"Accuracy: {accuracy}")
+def assertEqual(actual, expected, message=None):
+    if actual != expected:
+        print(message)
 
-        return classifier
+def test_classifyAttack():
+    print("             Bucket      Acceess Num   ")
+    print("Access 1       0              2")
+    result = detector.classifyAttack(0, [7,8,2])
+    # print(detector.thresholds)
 
-    def save_model(self):
-        joblib.dump(self.classifier, self.model_file)
-        print(f"Model saved to {self.model_file}.")
+    print("Access 2       1              2")
+    result = detector.classifyAttack(1, [5,6,2])
+    # print(detector.thresholds)
 
-    def load_model(self):
-        return joblib.load(self.model_file)
+    print("Access 3       0              3")
+    result = detector.classifyAttack(0, [8,9,3])
+    # print(detector.thresholds)
 
-# Example usage
+    print("Access 4       0              4")
+    result = detector.classifyAttack(0, [5,7,4])
+    # print(detector.thresholds)
+
+    print("Access 5       1              3")
+    result = detector.classifyAttack(1, [5,6,3])
+    # print(detector.thresholds)
+
+    print("Access 6       0              5")
+    result = detector.classifyAttack(0, [5,7,5])
+    # print(detector.thresholds)
+
+    print("Access 7       2              2")
+    result = detector.classifyAttack(2, [5,6,2])
+    # print(detector.thresholds)
+
+    print("Access 8       2              3")
+    result = detector.classifyAttack(2, [5,6,3])
+    # print(detector.thresholds)
+
+    print("Access 9       0              6")
+    result = detector.classifyAttack(0, [5,7,6])
+    # print(detector.thresholds)
+
+    print("Access 10      0              7")
+    result = detector.classifyAttack(0, [5,7,7])
+    # print(detector.thresholds)
+
+    print("Access 11      0              8")
+    result = detector.classifyAttack(0, [5,7,8])
+    # print(detector.thresholds)
+
+    ###
+
+
+
 if __name__ == "__main__":
-    detector = CRICMIGlobalDetector()
-    event_histories = [7, 3, 5, 2]  # Replace with actual data as needed
-    detector.attackPrediction(event_histories)
+    test_classifyAttack()
