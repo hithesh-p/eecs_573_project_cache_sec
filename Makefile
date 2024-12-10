@@ -14,3 +14,6 @@ test-local-unit:
 
 test-global-unit:
 	python3 configs/design_codes_573/global_detector/test_global_detector.py
+
+test-newcache:
+	python3 configs/design_codes_573/newcache/newcache_test.py
