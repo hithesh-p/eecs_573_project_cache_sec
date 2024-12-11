@@ -13,9 +13,18 @@
 
 Our project explores cache security in RISC-V systems using the gem5 simulator. It's based on the gem5 simulator, a modular platform for computer-system architecture research, encompassing system-level architecture as well as processor microarchitecture.
 
+## Branch breakdown
+ - main - **Deprecated.** Original branch used for creating the repository.
+ - eecs_573_proj_main - **Deprecated.** Main branch used for getting the gem5 simulator running on local machines before changes were put into place.
+ - newcache - NewCache implementation using the latest gem5 core pulled during repository creation (Version 24.1). Development focused on updating the NewCache reference code to run on the latest core.
+ - oldCore - NewCache implementation using the original gem5 core it was written for (Version 20.1). Development focused on fixing library errors to test backporting feasibility of other developments.
+ - stuck_bug_fix - **Main Development.** Current development of Local and Global Detector code, along with preperations for implementing NewCache.
+ - stuck_bug - **Deprecated.** Local and Global Detector original implementation. Branch development moved to stuck_bug_fix after bug fixes were put into place.
+
 ## Credit and Source
 
 This project is built upon the gem5 simulator. For more information about gem5, visit [gem5.org](https://www.gem5.org/).
+NewCache implementation is built off code created by Fanglei Liu. Repository can be found at [gem5-newcache](https://github.com/eepalms/gem5-newcache)
 
 ## Getting Started
 
